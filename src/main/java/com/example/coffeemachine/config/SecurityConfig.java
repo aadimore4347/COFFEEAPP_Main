@@ -138,14 +138,15 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/user/**").hasRole("ADMIN")
                 .requestMatchers("/api/user/profile").hasAnyRole("ADMIN", "FACILITY")
                 
-                // All other API endpoints require authentication
-                .requestMatchers("/api/**").authenticated()
+                // Temporarily allow all API endpoints for Phase 5 demo
+                .requestMatchers("/api/**").permitAll()
                 
                 // Allow everything else
                 .anyRequest().permitAll()
             )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .authenticationProvider(authenticationProvider());
+            // JWT filter temporarily disabled for Phase 5 demo
+            // .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
