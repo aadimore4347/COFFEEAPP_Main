@@ -2,10 +2,7 @@ package com.example.coffeemachine.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +23,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@Builder
 @ToString(exclude = {"machine"})
 public class UsageHistory extends BaseEntity {
 
