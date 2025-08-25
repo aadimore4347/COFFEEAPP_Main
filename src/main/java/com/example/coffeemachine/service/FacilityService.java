@@ -231,7 +231,7 @@ public class FacilityService {
         }
         return facilityRepository.findActiveByLocationContainingIgnoreCase(location.trim());
     }
-}
+
     /**
      * Get the facility ID that owns a specific machine.
      * Used for security checks to ensure users can only access their own facility's machines.
@@ -245,3 +245,4 @@ public class FacilityService {
                 .map(machine -> machine.getFacility().getId())
                 .orElse(null);
     }
+}

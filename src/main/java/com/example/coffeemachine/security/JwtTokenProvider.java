@@ -87,9 +87,9 @@ public class JwtTokenProvider {
      * @return username
      */
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
+        Claims claims = Jwts.parser()
                 .setSigningKey(secretKey)
-                .build()
+                
                 .parseClaimsJws(token)
                 .getBody();
 
@@ -104,9 +104,9 @@ public class JwtTokenProvider {
      */
     public boolean validateToken(String authToken) {
         try {
-            Jwts.parserBuilder()
+            Jwts.parser()
                     .setSigningKey(secretKey)
-                    .build()
+                    
                     .parseClaimsJws(authToken);
             return true;
         } catch (SecurityException ex) {
@@ -131,9 +131,9 @@ public class JwtTokenProvider {
      */
     public boolean validateRefreshToken(String refreshToken) {
         try {
-            Claims claims = Jwts.parserBuilder()
+            Claims claims = Jwts.parser()
                     .setSigningKey(secretKey)
-                    .build()
+                    
                     .parseClaimsJws(refreshToken)
                     .getBody();
 
@@ -171,9 +171,9 @@ public class JwtTokenProvider {
      * @return expiration date
      */
     public Date getExpirationDateFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
+        Claims claims = Jwts.parser()
                 .setSigningKey(secretKey)
-                .build()
+                
                 .parseClaimsJws(token)
                 .getBody();
 

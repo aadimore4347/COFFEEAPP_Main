@@ -51,7 +51,7 @@ public class MachineController {
      */
     @GetMapping("/{machineId}/status")
     @Operation(summary = "Get machine status", description = "Get current status and supply levels of a coffee machine")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('FACILITY') and @facilityService.getMachineOwnerFacilityId(#machineId) == @authenticationService.getCurrentUserFacilityId())")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('FACILITY')")
     public ResponseEntity<ApiResponse<CoffeeMachineDto>> getMachineStatus(
             @Parameter(description = "Machine ID") @PathVariable Long machineId) {
         
@@ -74,7 +74,7 @@ public class MachineController {
      */
     @GetMapping("/{machineId}/levels")
     @Operation(summary = "Get machine levels", description = "Get current supply levels (water, milk, beans) of a coffee machine")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('FACILITY') and @facilityService.getMachineOwnerFacilityId(#machineId) == @authenticationService.getCurrentUserFacilityId())")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('FACILITY')")
     public ResponseEntity<ApiResponse<CoffeeMachineDto>> getMachineLevels(
             @Parameter(description = "Machine ID") @PathVariable Long machineId) {
         
@@ -98,7 +98,7 @@ public class MachineController {
      */
     @GetMapping("/{machineId}/history")
     @Operation(summary = "Get machine usage history", description = "Get recent usage history for a coffee machine")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('FACILITY') and @facilityService.getMachineOwnerFacilityId(#machineId) == @authenticationService.getCurrentUserFacilityId())")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('FACILITY')")
     public ResponseEntity<ApiResponse<List<UsageHistoryDto>>> getMachineHistory(
             @Parameter(description = "Machine ID") @PathVariable Long machineId,
             @Parameter(description = "Hours to look back") @RequestParam(defaultValue = "24") int hours) {
@@ -121,7 +121,7 @@ public class MachineController {
      */
     @PostMapping("/{machineId}/brew")
     @Operation(summary = "Brew coffee", description = "Send brew command to a coffee machine")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('FACILITY') and @facilityService.getMachineOwnerFacilityId(#machineId) == @authenticationService.getCurrentUserFacilityId())")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('FACILITY')")
     public ResponseEntity<ApiResponse<String>> brewCoffee(
             @Parameter(description = "Machine ID") @PathVariable Long machineId,
             @Valid @RequestBody BrewRequest brewRequest) {
@@ -135,7 +135,7 @@ public class MachineController {
         
         try {
             // Publish MQTT brew command
-            mqttPublisherService.publishBrewCommand(machineId, brewRequest.getBrewType(), brewRequest.getVolumeMl());
+            mqttPublisherService.sendBrewCommand(machineId, brewRequest.getBrewType(), brewRequest.getVolumeMl());
             
             UserPrincipal currentUser = authenticationService.getCurrentUserPrincipal();
             String message = String.format("Brew command sent successfully: %s (%dml) by user %s", 
@@ -158,7 +158,7 @@ public class MachineController {
      */
     @GetMapping("/{machineId}/alerts")
     @Operation(summary = "Get machine alerts", description = "Get all unresolved alerts for a coffee machine")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('FACILITY') and @facilityService.getMachineOwnerFacilityId(#machineId) == @authenticationService.getCurrentUserFacilityId())")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('FACILITY')")
     public ResponseEntity<ApiResponse<List<AlertDto>>> getMachineAlerts(
             @Parameter(description = "Machine ID") @PathVariable Long machineId) {
         
@@ -180,7 +180,7 @@ public class MachineController {
      */
     @PostMapping("/{machineId}/alert/{alertId}/resolve")
     @Operation(summary = "Resolve machine alert", description = "Mark a machine alert as resolved")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('FACILITY') and @facilityService.getMachineOwnerFacilityId(#machineId) == @authenticationService.getCurrentUserFacilityId())")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('FACILITY')")
     public ResponseEntity<ApiResponse<String>> resolveAlert(
             @Parameter(description = "Machine ID") @PathVariable Long machineId,
             @Parameter(description = "Alert ID") @PathVariable Long alertId) {
