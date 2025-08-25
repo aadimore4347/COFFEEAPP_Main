@@ -154,14 +154,7 @@ public class AlertEvaluatorService {
                 .findMostRecentUnresolvedByMachineIdAndType(machine.getId(), type);
         
         if (existingAlert.isEmpty()) {
-            Alert alert = Alert.builder()
-                    .machine(machine)
-                    .type(type)
-                    .severity(severity)
-                    .message(message)
-                    .threshold(threshold)
-                    .resolved(false)
-                    .build();
+            Alert alert = new Alert(machine, type, severity, message, threshold);
             
             Alert saved = alertRepository.save(alert);
             log.warn("Created alert for machine {}: {} - {}", machine.getId(), type, message);

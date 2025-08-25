@@ -27,7 +27,6 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @NoArgsConstructor
-@Builder
 @ToString(exclude = {"machine"})
 public class Alert extends BaseEntity {
 
@@ -78,7 +77,6 @@ public class Alert extends BaseEntity {
      * Allows tracking of alert lifecycle and resolution status.
      */
     @Column(name = "resolved", nullable = false)
-    @Builder.Default
     private Boolean resolved = false;
 
     /**

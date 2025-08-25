@@ -151,13 +151,7 @@ public class CoffeeMachineService {
         
         return coffeeMachineRepository.findActiveById(machineId)
                 .map(machine -> {
-                    UsageHistory usage = UsageHistory.builder()
-                            .machine(machine)
-                            .timestamp(LocalDateTime.now())
-                            .brewType(brewType)
-                            .volumeMl(volumeMl)
-                            .tempAtBrew(machine.getTemperature())
-                            .build();
+                    UsageHistory usage = new UsageHistory(machine, LocalDateTime.now(), brewType, volumeMl, machine.getTemperature());
                     
                     return usageHistoryRepository.save(usage);
                 });

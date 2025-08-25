@@ -215,7 +215,7 @@ public class FacilityService {
         if (name == null || name.trim().isEmpty()) {
             return List.of();
         }
-        return facilityRepository.findActiveByNameContaining(name.trim());
+        return facilityRepository.findActiveByNameContainingIgnoreCase(name.trim());
     }
 
     /**
@@ -232,3 +232,16 @@ public class FacilityService {
         return facilityRepository.findActiveByLocationContainingIgnoreCase(location.trim());
     }
 }
+    /**
+     * Get the facility ID that owns a specific machine.
+     * Used for security checks to ensure users can only access their own facility's machines.
+     *
+     * @param machineId the machine ID
+     * @return facility ID that owns the machine, or null if machine not found
+     */
+    @Transactional(readOnly = true)
+    public Long getMachineOwnerFacilityId(Long machineId) {
+        return coffeeMachineRepository.findActiveById(machineId)
+                .map(machine -> machine.getFacility().getId())
+                .orElse(null);
+    }

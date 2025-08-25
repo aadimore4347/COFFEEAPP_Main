@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@Builder
 @ToString(exclude = {"machine"})
 public class UsageHistory extends BaseEntity {
 

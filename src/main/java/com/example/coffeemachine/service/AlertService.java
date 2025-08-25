@@ -7,8 +7,6 @@ import com.example.coffeemachine.repository.AlertRepository;
 import com.example.coffeemachine.alert.AlertEvaluatorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,17 +38,6 @@ public class AlertService {
     }
 
     /**
-     * Gets all active alerts for a specific machine.
-     *
-     * @param machineId the machine ID
-     * @return list of active alerts for the machine
-     */
-    @Transactional(readOnly = true)
-    public List<Alert> getActiveAlertsByMachineId(Long machineId) {
-        return alertRepository.findActiveUnresolvedByMachineId(machineId);
-    }
-
-    /**
      * Gets all unresolved alerts for a specific machine.
      *
      * @param machineId the machine ID
@@ -62,17 +49,6 @@ public class AlertService {
     }
 
     /**
-     * Gets all alerts for machines in a specific facility.
-     *
-     * @param facilityId the facility ID
-     * @return list of alerts for machines in the facility
-     */
-    @Transactional(readOnly = true)
-    public List<Alert> getAlertsByFacilityId(Long facilityId) {
-        return alertRepository.findActiveUnresolvedByFacilityId(facilityId);
-    }
-
-    /**
      * Gets all unresolved alerts for machines in a specific facility.
      *
      * @param facilityId the facility ID
@@ -80,7 +56,7 @@ public class AlertService {
      */
     @Transactional(readOnly = true)
     public List<Alert> getUnresolvedAlertsByFacilityId(Long facilityId) {
-        return alertRepository.findUnresolvedByFacilityId(facilityId);
+        return alertRepository.findActiveUnresolvedByFacilityId(facilityId);
     }
 
     /**
@@ -91,18 +67,19 @@ public class AlertService {
      */
     @Transactional(readOnly = true)
     public List<Alert> getAlertsBySeverity(Severity severity) {
-        return alertRepository.findBySeverityAndIsActiveTrue(severity);
+        return alertRepository.findActiveBySeverity(severity);
     }
 
     /**
-     * Gets alerts by type.
+     * Gets alerts by type for a specific machine.
      *
+     * @param machineId the machine ID
      * @param alertType the alert type
      * @return list of alerts of the specified type
      */
     @Transactional(readOnly = true)
-    public List<Alert> getAlertsByType(AlertType alertType) {
-        return alertRepository.findByTypeAndIsActiveTrue(alertType);
+    public List<Alert> getAlertsByMachineAndType(Long machineId, AlertType alertType) {
+        return alertRepository.findActiveByMachineIdAndType(machineId, alertType);
     }
 
     /**
@@ -113,42 +90,30 @@ public class AlertService {
      */
     @Transactional(readOnly = true)
     public List<Alert> getRecentAlerts(int hours) {
-        LocalDateTime since = LocalDateTime.now().minusHours(hours);
-        return alertRepository.findAlertsCreatedAfter(since);
+        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime startTime = endTime.minusHours(hours);
+        return alertRepository.findActiveByCreatedAtBetween(startTime, endTime);
     }
 
     /**
-     * Gets paginated alerts with optional filtering.
+     * Gets all critical unresolved alerts.
      *
-     * @param machineId optional machine ID filter
-     * @param severity optional severity filter
-     * @param resolved optional resolved status filter
-     * @param pageable pagination information
-     * @return page of alerts
+     * @return list of critical unresolved alerts
      */
     @Transactional(readOnly = true)
-    public Page<Alert> getAlertsPage(Long machineId, Severity severity, Boolean resolved, Pageable pageable) {
-        if (machineId != null && severity != null && resolved != null) {
-            return alertRepository.findByMachineIdAndSeverityAndResolvedAndIsActiveTrue(
-                    machineId, severity, resolved, pageable);
-        } else if (machineId != null && severity != null) {
-            return alertRepository.findByMachineIdAndSeverityAndIsActiveTrue(
-                    machineId, severity, pageable);
-        } else if (machineId != null && resolved != null) {
-            return alertRepository.findByMachineIdAndResolvedAndIsActiveTrue(
-                    machineId, resolved, pageable);
-        } else if (severity != null && resolved != null) {
-            return alertRepository.findBySeverityAndResolvedAndIsActiveTrue(
-                    severity, resolved, pageable);
-        } else if (machineId != null) {
-            return alertRepository.findByMachineIdAndIsActiveTrue(machineId, pageable);
-        } else if (severity != null) {
-            return alertRepository.findBySeverityAndIsActiveTrue(severity, pageable);
-        } else if (resolved != null) {
-            return alertRepository.findByResolvedAndIsActiveTrue(resolved, pageable);
-        } else {
-            return alertRepository.findByIsActiveTrue(pageable);
-        }
+    public List<Alert> getCriticalAlerts() {
+        return alertRepository.findActiveCriticalUnresolved();
+    }
+
+    /**
+     * Gets critical unresolved alerts for a specific facility.
+     *
+     * @param facilityId the facility ID
+     * @return list of critical unresolved alerts for the facility
+     */
+    @Transactional(readOnly = true)
+    public List<Alert> getCriticalAlertsByFacilityId(Long facilityId) {
+        return alertRepository.findActiveCriticalUnresolvedByFacilityId(facilityId);
     }
 
     /**
@@ -246,12 +211,12 @@ public class AlertService {
      */
     @Transactional(readOnly = true)
     public java.util.Map<Severity, Long> getUnresolvedAlertCountsBySeverity() {
-        List<Alert> unresolvedAlerts = alertRepository.findByResolvedAndIsActiveTrue(false);
+        List<Object[]> results = alertRepository.countUnresolvedBySeverity();
         
-        return unresolvedAlerts.stream()
-                .collect(java.util.stream.Collectors.groupingBy(
-                        Alert::getSeverity,
-                        java.util.stream.Collectors.counting()
+        return results.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        row -> (Severity) row[0],
+                        row -> (Long) row[1]
                 ));
     }
 
@@ -262,12 +227,12 @@ public class AlertService {
      */
     @Transactional(readOnly = true)
     public java.util.Map<AlertType, Long> getUnresolvedAlertCountsByType() {
-        List<Alert> unresolvedAlerts = alertRepository.findByResolvedAndIsActiveTrue(false);
+        List<Object[]> results = alertRepository.countUnresolvedByType();
         
-        return unresolvedAlerts.stream()
-                .collect(java.util.stream.Collectors.groupingBy(
-                        Alert::getType,
-                        java.util.stream.Collectors.counting()
+        return results.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        row -> (AlertType) row[0],
+                        row -> (Long) row[1]
                 ));
     }
 
@@ -290,7 +255,7 @@ public class AlertService {
      */
     @Transactional(readOnly = true)
     public boolean hasCriticalAlerts() {
-        return !alertRepository.findBySeverityAndResolvedAndIsActiveTrue(Severity.CRITICAL, false).isEmpty();
+        return !alertRepository.findActiveCriticalUnresolved().isEmpty();
     }
 
     /**
@@ -301,7 +266,16 @@ public class AlertService {
      */
     @Transactional(readOnly = true)
     public boolean hasCriticalAlertsForFacility(Long facilityId) {
-        return alertRepository.findUnresolvedByFacilityId(facilityId).stream()
-                .anyMatch(alert -> alert.getSeverity() == Severity.CRITICAL);
+        return !alertRepository.findActiveCriticalUnresolvedByFacilityId(facilityId).isEmpty();
+    }
+
+    /**
+     * Gets all unresolved alerts ordered by severity.
+     *
+     * @return list of unresolved alerts ordered by severity
+     */
+    @Transactional(readOnly = true)
+    public List<Alert> getAllUnresolvedAlerts() {
+        return alertRepository.findActiveUnresolvedOrderedBySeverity();
     }
 }
