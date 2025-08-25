@@ -68,6 +68,7 @@ INSERT INTO coffee_machine (id, facility_id, status, temperature, water_level, m
 -- ======================================================================================
 
 -- Recent usage (last 24 hours) - Peak hours simulation
+-- Note: Using MySQL/H2 compatible syntax for development. Production should use Flyway for schema management.
 INSERT INTO usage_history (id, machine_id, timestamp, brew_type, volume_ml, temp_at_brew, is_active, created_at, updated_at) VALUES
 -- Morning rush (7-9 AM) - Downtown Office
 (1, 1, NOW() - INTERVAL 2 HOUR, 'ESPRESSO', 30, 92.5, true, NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 2 HOUR),

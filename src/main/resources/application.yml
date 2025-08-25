@@ -62,7 +62,7 @@ management:
 app:
   # JWT Configuration
   jwt:
-    secret: "mySecretKey123456789012345678901234567890" # Should be externalized in production
+    secret: ${JWT_SECRET:defaultDevSecretKey123456789012345678901234567890} # Override in production
     expiration-ms: 86400000 # 24 hours
     refresh-expiration-ms: 604800000 # 7 days
   

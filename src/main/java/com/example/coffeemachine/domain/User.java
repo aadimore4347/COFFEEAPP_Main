@@ -136,10 +136,15 @@ public class User extends BaseEntity {
 
     /**
      * Validation method to ensure business rules are followed.
+     * Note: Primary validation is handled by database triggers for data integrity.
+     * This provides early validation feedback in the application layer.
      */
     @PrePersist
     @PreUpdate
     private void validateUser() {
+        // Note: These validations are also enforced by database triggers
+        // but we provide early feedback here for better UX
+        
         // FACILITY users should have a facility assignment
         if (role == UserRole.FACILITY && facility == null) {
             throw new IllegalStateException("FACILITY users must be assigned to a facility");

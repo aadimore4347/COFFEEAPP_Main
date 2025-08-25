@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -103,8 +104,21 @@ public interface AlertRepository extends BaseRepository<Alert> {
      * @param alertType the alert type
      * @return Optional containing the most recent unresolved alert
      */
-    @Query("SELECT a FROM Alert a WHERE a.machine.id = :machineId AND a.type = :alertType AND a.resolved = false AND a.isActive = true ORDER BY a.createdAt DESC LIMIT 1")
-    Optional<Alert> findMostRecentUnresolvedByMachineIdAndType(@Param("machineId") Long machineId, @Param("alertType") AlertType alertType);
+    @Query("SELECT a FROM Alert a WHERE a.machine.id = :machineId AND a.type = :alertType AND a.resolved = false AND a.isActive = true ORDER BY a.createdAt DESC")
+    List<Alert> findUnresolvedByMachineIdAndTypeOrderByCreatedAtDesc(@Param("machineId") Long machineId, @Param("alertType") AlertType alertType);
+    
+    /**
+     * Find the most recent unresolved alert of a specific type for a machine.
+     * Used for alert debouncing to prevent duplicate alerts.
+     * 
+     * @param machineId the machine ID
+     * @param alertType the alert type
+     * @return Optional containing the most recent unresolved alert
+     */
+    default Optional<Alert> findMostRecentUnresolvedByMachineIdAndType(Long machineId, AlertType alertType) {
+        List<Alert> alerts = findUnresolvedByMachineIdAndTypeOrderByCreatedAtDesc(machineId, alertType);
+        return alerts.isEmpty() ? Optional.empty() : Optional.of(alerts.get(0));
+    }
 
     /**
      * Find alerts created within a specific time period.
@@ -170,7 +184,8 @@ public interface AlertRepository extends BaseRepository<Alert> {
      * @return number of alerts resolved
      */
     @Modifying
-    @Query("UPDATE Alert a SET a.resolved = true, a.updatedAt = CURRENT_TIMESTAMP " +
+    @Transactional
+    @Query("UPDATE Alert a SET a.resolved = true " +
            "WHERE a.machine.id = :machineId AND a.type = :alertType AND a.resolved = false AND a.isActive = true")
     int resolveAlertsByMachineIdAndType(@Param("machineId") Long machineId, @Param("alertType") AlertType alertType);
 
@@ -181,7 +196,8 @@ public interface AlertRepository extends BaseRepository<Alert> {
      * @return number of alerts resolved (should be 1 if successful)
      */
     @Modifying
-    @Query("UPDATE Alert a SET a.resolved = true, a.updatedAt = CURRENT_TIMESTAMP WHERE a.id = :alertId AND a.isActive = true")
+    @Transactional
+    @Query("UPDATE Alert a SET a.resolved = true WHERE a.id = :alertId AND a.isActive = true")
     int resolveAlertById(@Param("alertId") Long alertId);
 
     /**

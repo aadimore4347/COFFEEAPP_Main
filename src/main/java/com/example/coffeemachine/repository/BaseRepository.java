@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -60,7 +61,8 @@ public interface BaseRepository<T extends BaseEntity> extends JpaRepository<T, L
      * @return number of entities updated (should be 1 if successful)
      */
     @Modifying
-    @Query("UPDATE #{#entityName} e SET e.isActive = false, e.updatedAt = CURRENT_TIMESTAMP WHERE e.id = :id")
+    @Transactional
+    @Query("UPDATE #{#entityName} e SET e.isActive = false WHERE e.id = :id")
     int softDeleteById(@Param("id") Long id);
 
     /**
@@ -70,7 +72,8 @@ public interface BaseRepository<T extends BaseEntity> extends JpaRepository<T, L
      * @return number of entities updated (should be 1 if successful)
      */
     @Modifying
-    @Query("UPDATE #{#entityName} e SET e.isActive = true, e.updatedAt = CURRENT_TIMESTAMP WHERE e.id = :id")
+    @Transactional
+    @Query("UPDATE #{#entityName} e SET e.isActive = true WHERE e.id = :id")
     int restoreById(@Param("id") Long id);
 
     /**
@@ -88,6 +91,7 @@ public interface BaseRepository<T extends BaseEntity> extends JpaRepository<T, L
      * @return number of entities permanently deleted
      */
     @Modifying
+    @Transactional
     @Query("DELETE FROM #{#entityName} e WHERE e.isActive = false")
     int permanentlyDeleteAllSoftDeleted();
 }
