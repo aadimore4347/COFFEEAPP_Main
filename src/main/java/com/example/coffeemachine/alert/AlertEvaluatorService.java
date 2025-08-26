@@ -101,7 +101,7 @@ public class AlertEvaluatorService {
             return;
         }
         
-        double temp = machine.getTemperature();
+        double temp = machine.getTemperature().doubleValue();
         
         if (temp < MIN_TEMPERATURE || temp > MAX_TEMPERATURE) {
             String message = temp < MIN_TEMPERATURE ? 

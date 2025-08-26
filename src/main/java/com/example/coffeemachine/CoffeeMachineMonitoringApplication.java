@@ -2,7 +2,6 @@ package com.example.coffeemachine;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -18,7 +17,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * - Role-based dashboards for facilities and administrators
  */
 @SpringBootApplication
-@EnableJpaAuditing
 @EnableAsync
 @EnableScheduling
 @IntegrationComponentScan

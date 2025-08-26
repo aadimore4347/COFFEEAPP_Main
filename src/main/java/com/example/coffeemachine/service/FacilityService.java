@@ -138,9 +138,7 @@ public class FacilityService {
         if (machine.getStatus() == null) {
             machine.setStatus(MachineStatus.OFF);
         }
-        if (machine.getTemperature() == null) {
-            machine.setTemperature(0.0);
-        }
+        // Leave temperature as null by default; it will be populated via MQTT updates
         if (machine.getWaterLevel() == null) {
             machine.setWaterLevel(100);
         }

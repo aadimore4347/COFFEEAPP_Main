@@ -9,6 +9,7 @@ import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.math.BigDecimal;
 
 /**
  * Entity representing a coffee machine in the monitoring system.
@@ -56,7 +57,7 @@ public class CoffeeMachine extends BaseEntity {
     @DecimalMin(value = "0.0", message = "Temperature cannot be negative")
     @DecimalMax(value = "150.0", message = "Temperature cannot exceed 150°C")
     @Column(name = "temperature", precision = 5, scale = 2)
-    private Double temperature;
+    private BigDecimal temperature;
 
     /**
      * Current water level as percentage (0-100).
@@ -121,7 +122,7 @@ public class CoffeeMachine extends BaseEntity {
                         Integer milkLevel, Integer beansLevel) {
         this.facility = facility;
         this.status = status;
-        this.temperature = temperature;
+        this.temperature = new BigDecimal(temperature.toString());
         this.waterLevel = waterLevel;
         this.milkLevel = milkLevel;
         this.beansLevel = beansLevel;
@@ -139,7 +140,7 @@ public class CoffeeMachine extends BaseEntity {
      */
     public void updateTemperature(Double newTemperature) {
         if (newTemperature != null && newTemperature >= 0 && newTemperature <= 150) {
-            this.temperature = newTemperature;
+            this.temperature = new BigDecimal(newTemperature.toString());
         }
     }
 
@@ -227,7 +228,7 @@ public class CoffeeMachine extends BaseEntity {
      * Get the most recent temperature reading.
      */
     public Double getCurrentTemperature() {
-        return temperature;
+        return temperature.doubleValue();
     }
 
     /**

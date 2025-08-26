@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 /**
  * Service for managing coffee machine operations and state updates.
@@ -39,7 +40,7 @@ public class CoffeeMachineService {
         
         return coffeeMachineRepository.findActiveById(machineId)
                 .map(machine -> {
-                    machine.setTemperature(temperature);
+                    machine.setTemperature(temperature != null ? new BigDecimal(temperature.toString()) : null);
                     CoffeeMachine saved = coffeeMachineRepository.save(machine);
                     
                     // Evaluate temperature-related alerts
@@ -151,7 +152,8 @@ public class CoffeeMachineService {
         
         return coffeeMachineRepository.findActiveById(machineId)
                 .map(machine -> {
-                    UsageHistory usage = new UsageHistory(machine, LocalDateTime.now(), brewType, volumeMl, machine.getTemperature());
+                    Double tempAtBrew = machine.getTemperature() != null ? machine.getTemperature().doubleValue() : null;
+                    UsageHistory usage = new UsageHistory(machine, LocalDateTime.now(), brewType, volumeMl, tempAtBrew);
                     
                     return usageHistoryRepository.save(usage);
                 });

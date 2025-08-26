@@ -5,6 +5,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 /**
  * Entity representing a usage history record for coffee machine brewing activities.
@@ -70,7 +71,7 @@ public class UsageHistory extends BaseEntity {
     @DecimalMin(value = "70.0", message = "Brewing temperature must be at least 70°C")
     @DecimalMax(value = "100.0", message = "Brewing temperature cannot exceed 100°C")
     @Column(name = "temp_at_brew", precision = 5, scale = 2)
-    private Double tempAtBrew;
+    private BigDecimal tempAtBrew;
 
     /**
      * Constructor for creating a new usage history record.
@@ -90,7 +91,7 @@ public class UsageHistory extends BaseEntity {
         this.timestamp = timestamp;
         this.brewType = brewType;
         this.volumeMl = volumeMl;
-        this.tempAtBrew = tempAtBrew;
+        this.tempAtBrew = tempAtBrew != null ? new BigDecimal(tempAtBrew.toString()) : null;
     }
 
     /**
@@ -156,9 +157,9 @@ public class UsageHistory extends BaseEntity {
         
         // Optimal temperature ranges for different brew types
         return switch (brewType) {
-            case ESPRESSO, DOUBLE_ESPRESSO -> tempAtBrew >= 88 && tempAtBrew <= 94;
-            case AMERICANO -> tempAtBrew >= 85 && tempAtBrew <= 92;
-            case CAPPUCCINO, LATTE, MOCHA, FLAT_WHITE, MACCHIATO -> tempAtBrew >= 86 && tempAtBrew <= 93;
+            case ESPRESSO, DOUBLE_ESPRESSO -> tempAtBrew.compareTo(BigDecimal.valueOf(88)) >= 0 && tempAtBrew.compareTo(BigDecimal.valueOf(94)) <= 0;
+            case AMERICANO -> tempAtBrew.compareTo(BigDecimal.valueOf(85)) >= 0 && tempAtBrew.compareTo(BigDecimal.valueOf(92)) <= 0;
+            case CAPPUCCINO, LATTE, MOCHA, FLAT_WHITE, MACCHIATO -> tempAtBrew.compareTo(BigDecimal.valueOf(86)) >= 0 && tempAtBrew.compareTo(BigDecimal.valueOf(93)) <= 0;
         };
     }
 
