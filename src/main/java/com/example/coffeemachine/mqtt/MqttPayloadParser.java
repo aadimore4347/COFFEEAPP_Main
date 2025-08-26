@@ -1,262 +1,184 @@
 package com.example.coffeemachine.mqtt;
 
-import com.example.coffeemachine.domain.BrewType;
-import com.example.coffeemachine.domain.MachineStatus;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.math.BigDecimal;
+import java.util.Map;
 
-/**
- * Utility class for parsing MQTT message payloads.
- * 
- * Supports both JSON and plain text payload formats with robust error handling.
- * Provides type-safe parsing for all coffee machine telemetry data.
- */
-@Slf4j
 @Component
-@RequiredArgsConstructor
+@Slf4j
 public class MqttPayloadParser {
 
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
-     * Parse a temperature payload from MQTT message.
-     * 
-     * Supports:
-     * - JSON: {"temperature": 92.5, "timestamp": "2024-01-15T10:30:00"}
-     * - Plain text: "92.5"
-     * 
-     * @param payload the raw payload bytes
-     * @return parsed temperature value or null if invalid
+     * Parse temperature value from MQTT payload.
+     * Supports both JSON and plain number formats.
      */
-    public Double parseTemperature(byte[] payload) {
+    public BigDecimal parseTemperature(String payload) {
         try {
-            String payloadStr = new String(payload).trim();
-            
-            if (isJson(payloadStr)) {
-                JsonNode json = objectMapper.readTree(payloadStr);
-                if (json.has("temperature")) {
-                    double temp = json.get("temperature").asDouble();
-                    return isValidTemperature(temp) ? temp : null;
+            // Try to parse as JSON first
+            if (payload.trim().startsWith("{")) {
+                Map<String, Object> json = objectMapper.readValue(payload, Map.class);
+                Object tempValue = json.get("temperature");
+                if (tempValue != null) {
+                    return new BigDecimal(tempValue.toString());
                 }
-            } else {
-                // Plain text format
-                double temp = Double.parseDouble(payloadStr);
-                return isValidTemperature(temp) ? temp : null;
             }
-        } catch (JsonProcessingException | NumberFormatException e) {
-            log.warn("Failed to parse temperature payload: {}", new String(payload), e);
+            
+            // Fallback to plain number parsing
+            return new BigDecimal(payload.trim());
+        } catch (Exception e) {
+            log.warn("Failed to parse temperature from payload: {}", payload);
+            return null;
+        }
+    }
+
+    /**
+     * Parse level value (0-100) from MQTT payload.
+     * Supports both JSON and plain number formats.
+     */
+    public Integer parseLevel(String payload) {
+        try {
+            // Try to parse as JSON first
+            if (payload.trim().startsWith("{")) {
+                Map<String, Object> json = objectMapper.readValue(payload, Map.class);
+                Object levelValue = json.get("level");
+                if (levelValue != null) {
+                    int level = Integer.parseInt(levelValue.toString());
+                    return Math.max(0, Math.min(100, level)); // Ensure 0-100 range
+                }
+            }
+            
+            // Fallback to plain number parsing
+            int level = Integer.parseInt(payload.trim());
+            return Math.max(0, Math.min(100, level)); // Ensure 0-100 range
+        } catch (Exception e) {
+            log.warn("Failed to parse level from payload: {}", payload);
+            return null;
+        }
+    }
+
+    /**
+     * Parse status value from MQTT payload.
+     * Supports both JSON and plain string formats.
+     */
+    public String parseStatus(String payload) {
+        try {
+            // Try to parse as JSON first
+            if (payload.trim().startsWith("{")) {
+                Map<String, Object> json = objectMapper.readValue(payload, Map.class);
+                Object statusValue = json.get("status");
+                if (statusValue != null) {
+                    return statusValue.toString().toUpperCase();
+                }
+            }
+            
+            // Fallback to plain string parsing
+            return payload.trim().toUpperCase();
+        } catch (Exception e) {
+            log.warn("Failed to parse status from payload: {}", payload);
+            return null;
+        }
+    }
+
+    /**
+     * Parse usage event from MQTT payload.
+     * Supports both JSON and plain string formats.
+     */
+    public UsageEvent parseUsageEvent(String payload) {
+        try {
+            // Try to parse as JSON first
+            if (payload.trim().startsWith("{")) {
+                Map<String, Object> json = objectMapper.readValue(payload, Map.class);
+                
+                String brewType = getStringValue(json, "brewType", "UNKNOWN");
+                Integer volumeMl = getIntValue(json, "volumeMl", 0);
+                BigDecimal tempAtBrew = getBigDecimalValue(json, "tempAtBrew");
+                
+                return new UsageEvent(brewType, volumeMl, tempAtBrew);
+            }
+            
+            // Fallback to plain string parsing (format: "brewType:volumeMl:temp")
+            String[] parts = payload.split(":");
+            if (parts.length >= 2) {
+                String brewType = parts[0].trim();
+                Integer volumeMl = parts.length > 1 ? parseIntSafe(parts[1].trim()) : 0;
+                BigDecimal tempAtBrew = parts.length > 2 ? parseBigDecimalSafe(parts[2].trim()) : null;
+                
+                return new UsageEvent(brewType, volumeMl, tempAtBrew);
+            }
+            
+            return null;
+        } catch (Exception e) {
+            log.warn("Failed to parse usage event from payload: {}", payload);
+            return null;
+        }
+    }
+
+    private String getStringValue(Map<String, Object> json, String key, String defaultValue) {
+        Object value = json.get(key);
+        return value != null ? value.toString() : defaultValue;
+    }
+
+    private Integer getIntValue(Map<String, Object> json, String key, Integer defaultValue) {
+        Object value = json.get(key);
+        if (value != null) {
+            try {
+                return Integer.parseInt(value.toString());
+            } catch (NumberFormatException e) {
+                log.warn("Failed to parse integer value for key {}: {}", key, value);
+            }
+        }
+        return defaultValue;
+    }
+
+    private BigDecimal getBigDecimalValue(Map<String, Object> json, String key) {
+        Object value = json.get(key);
+        if (value != null) {
+            try {
+                return new BigDecimal(value.toString());
+            } catch (NumberFormatException e) {
+                log.warn("Failed to parse BigDecimal value for key {}: {}", key, value);
+            }
         }
         return null;
     }
 
-    /**
-     * Parse a supply level payload (water, milk, beans) from MQTT message.
-     * 
-     * Supports:
-     * - JSON: {"level": 85, "timestamp": "2024-01-15T10:30:00"}
-     * - Plain text: "85"
-     * 
-     * @param payload the raw payload bytes
-     * @return parsed level value (0-100) or null if invalid
-     */
-    public Integer parseSupplyLevel(byte[] payload) {
+    private Integer parseIntSafe(String value) {
         try {
-            String payloadStr = new String(payload).trim();
-            
-            if (isJson(payloadStr)) {
-                JsonNode json = objectMapper.readTree(payloadStr);
-                if (json.has("level")) {
-                    int level = json.get("level").asInt();
-                    return isValidSupplyLevel(level) ? level : null;
-                }
-            } else {
-                // Plain text format
-                int level = Integer.parseInt(payloadStr);
-                return isValidSupplyLevel(level) ? level : null;
-            }
-        } catch (JsonProcessingException | NumberFormatException e) {
-            log.warn("Failed to parse supply level payload: {}", new String(payload), e);
-        }
-        return null;
-    }
-
-    /**
-     * Parse a machine status payload from MQTT message.
-     * 
-     * Supports:
-     * - JSON: {"status": "ON", "timestamp": "2024-01-15T10:30:00"}
-     * - Plain text: "ON"
-     * 
-     * @param payload the raw payload bytes
-     * @return parsed MachineStatus or null if invalid
-     */
-    public MachineStatus parseStatus(byte[] payload) {
-        try {
-            String payloadStr = new String(payload).trim();
-            String statusStr;
-            
-            if (isJson(payloadStr)) {
-                JsonNode json = objectMapper.readTree(payloadStr);
-                if (json.has("status")) {
-                    statusStr = json.get("status").asText();
-                } else {
-                    return null;
-                }
-            } else {
-                // Plain text format
-                statusStr = payloadStr;
-            }
-            
-            return parseStatusString(statusStr);
-        } catch (JsonProcessingException e) {
-            log.warn("Failed to parse status payload: {}", new String(payload), e);
-        }
-        return null;
-    }
-
-    /**
-     * Parse a usage event payload from MQTT message.
-     * 
-     * Supports:
-     * - JSON: {
-     *     "brewType": "ESPRESSO",
-     *     "volume": 30,
-     *     "temperature": 92.5,
-     *     "timestamp": "2024-01-15T10:30:00"
-     *   }
-     * - Plain text: "ESPRESSO" (minimal format)
-     * 
-     * @param payload the raw payload bytes
-     * @return parsed UsageEvent or null if invalid
-     */
-    public UsageEvent parseUsage(byte[] payload) {
-        try {
-            String payloadStr = new String(payload).trim();
-            
-            if (isJson(payloadStr)) {
-                JsonNode json = objectMapper.readTree(payloadStr);
-                
-                if (!json.has("brewType")) {
-                    return null;
-                }
-                
-                String brewTypeStr = json.get("brewType").asText();
-                BrewType brewType = parseBrewType(brewTypeStr);
-                if (brewType == null) {
-                    return null;
-                }
-                
-                Integer volume = json.has("volume") ? json.get("volume").asInt() : null;
-                Double temperature = json.has("temperature") ? json.get("temperature").asDouble() : null;
-                LocalDateTime timestamp = json.has("timestamp") ? 
-                    parseTimestamp(json.get("timestamp").asText()) : LocalDateTime.now();
-                
-                return new UsageEvent(brewType, volume, temperature, timestamp);
-            } else {
-                // Plain text format - just brew type
-                BrewType brewType = parseBrewType(payloadStr);
-                return brewType != null ? new UsageEvent(brewType, null, null, LocalDateTime.now()) : null;
-            }
-        } catch (JsonProcessingException e) {
-            log.warn("Failed to parse usage payload: {}", new String(payload), e);
-        }
-        return null;
-    }
-
-    /**
-     * Extract machine ID from MQTT topic.
-     * 
-     * Topic format: coffeeMachine/{machineId}/topicType
-     * 
-     * @param topic the MQTT topic
-     * @return machine ID or null if invalid format
-     */
-    public Long extractMachineId(String topic) {
-        try {
-            String[] parts = topic.split("/");
-            if (parts.length >= 2 && "coffeeMachine".equals(parts[0])) {
-                return Long.parseLong(parts[1]);
-            }
+            return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            log.warn("Failed to extract machine ID from topic: {}", topic, e);
+            return 0;
         }
-        return null;
     }
 
-    /**
-     * Determine the topic type from MQTT topic.
-     * 
-     * @param topic the MQTT topic
-     * @return topic type (temperature, waterLevel, etc.) or null
-     */
-    public String extractTopicType(String topic) {
-        String[] parts = topic.split("/");
-        return parts.length >= 3 ? parts[2] : null;
-    }
-
-    // Helper methods
-
-    private boolean isJson(String payload) {
-        return payload.trim().startsWith("{") && payload.trim().endsWith("}");
-    }
-
-    private boolean isValidTemperature(double temp) {
-        return temp >= 0 && temp <= 150; // Reasonable temperature range for coffee machines
-    }
-
-    private boolean isValidSupplyLevel(int level) {
-        return level >= 0 && level <= 100; // Percentage value
-    }
-
-    private MachineStatus parseStatusString(String statusStr) {
+    private BigDecimal parseBigDecimalSafe(String value) {
         try {
-            return MachineStatus.valueOf(statusStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid machine status: {}", statusStr);
+            return new BigDecimal(value);
+        } catch (NumberFormatException e) {
             return null;
         }
     }
 
-    private BrewType parseBrewType(String brewTypeStr) {
-        try {
-            return BrewType.valueOf(brewTypeStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid brew type: {}", brewTypeStr);
-            return null;
-        }
-    }
-
-    private LocalDateTime parseTimestamp(String timestampStr) {
-        try {
-            return LocalDateTime.parse(timestampStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        } catch (DateTimeParseException e) {
-            log.warn("Failed to parse timestamp: {}", timestampStr, e);
-            return LocalDateTime.now();
-        }
-    }
-
     /**
-     * Data class representing a parsed usage event.
+     * Inner class representing a usage event.
      */
     public static class UsageEvent {
-        public final BrewType brewType;
-        public final Integer volume;
-        public final Double temperature;
-        public final LocalDateTime timestamp;
+        private final String brewType;
+        private final Integer volumeMl;
+        private final BigDecimal tempAtBrew;
 
-        public UsageEvent(BrewType brewType, Integer volume, Double temperature, LocalDateTime timestamp) {
+        public UsageEvent(String brewType, Integer volumeMl, BigDecimal tempAtBrew) {
             this.brewType = brewType;
-            this.volume = volume;
-            this.temperature = temperature;
-            this.timestamp = timestamp;
+            this.volumeMl = volumeMl;
+            this.tempAtBrew = tempAtBrew;
         }
+
+        public String brewType() { return brewType; }
+        public Integer volumeMl() { return volumeMl; }
+        public BigDecimal tempAtBrew() { return tempAtBrew; }
     }
 }

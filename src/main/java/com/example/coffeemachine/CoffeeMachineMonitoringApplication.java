@@ -3,7 +3,7 @@ package com.example.coffeemachine;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.integration.annotation.IntegrationComponentScan;
+// MQTT functionality moved to separate mqtt-worker service
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -21,7 +21,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableJpaAuditing
 @EnableAsync
 @EnableScheduling
-@IntegrationComponentScan
+// MQTT functionality moved to separate mqtt-worker service
 public class CoffeeMachineMonitoringApplication {
 
     public static void main(String[] args) {

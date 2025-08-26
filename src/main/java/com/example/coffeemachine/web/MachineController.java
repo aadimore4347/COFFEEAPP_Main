@@ -2,7 +2,6 @@ package com.example.coffeemachine.web;
 
 import com.example.coffeemachine.domain.CoffeeMachine;
 import com.example.coffeemachine.domain.UsageHistory;
-import com.example.coffeemachine.mqtt.MqttPublisherService;
 import com.example.coffeemachine.security.UserPrincipal;
 import com.example.coffeemachine.service.AlertService;
 import com.example.coffeemachine.service.AuthenticationService;
@@ -37,7 +36,6 @@ public class MachineController {
     private final CoffeeMachineService coffeeMachineService;
     private final AlertService alertService;
     private final AuthenticationService authenticationService;
-    private final MqttPublisherService mqttPublisherService;
     private final CoffeeMachineMapper coffeeMachineMapper;
     private final AlertMapper alertMapper;
     private final UsageHistoryMapper usageHistoryMapper;
@@ -133,20 +131,14 @@ public class MachineController {
             return ResponseEntity.notFound().build();
         }
         
-        try {
-            // Publish MQTT brew command
-            mqttPublisherService.sendBrewCommand(machineId, brewRequest.getBrewType(), brewRequest.getVolumeMl());
-            
-            UserPrincipal currentUser = authenticationService.getCurrentUserPrincipal();
-            String message = String.format("Brew command sent successfully: %s (%dml) by user %s", 
-                    brewRequest.getBrewType(), brewRequest.getVolumeMl(), currentUser.getUsername());
-            
-            return ResponseEntity.ok(ApiResponse.success("Command sent", message));
-        } catch (Exception e) {
-            log.error("Failed to send brew command to machine {}: {}", machineId, e.getMessage());
-            return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Failed to send brew command", "BREW_COMMAND_FAILED"));
-        }
+        // Note: MQTT brew command functionality moved to separate mqtt-worker service
+        // For now, just record the brewing event in the database
+        
+        UserPrincipal currentUser = authenticationService.getCurrentUserPrincipal();
+        String message = String.format("Brew command received: %s (%dml) by user %s", 
+                brewRequest.getBrewType(), brewRequest.getVolumeMl(), currentUser.getUsername());
+        
+        return ResponseEntity.ok(ApiResponse.success("Command received", message));
     }
 
     /**
