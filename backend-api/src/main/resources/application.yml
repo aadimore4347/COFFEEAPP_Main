@@ -235,4 +235,3 @@ logging:
   level:
     com.example.coffeemachine: DEBUG
     org.springframework.test: WARN
-    org.springframework.test: WARN
