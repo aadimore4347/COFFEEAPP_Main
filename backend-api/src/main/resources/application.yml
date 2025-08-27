@@ -100,7 +100,7 @@ spring:
   
   # MySQL Database for Development
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/?user=root
+    url: jdbc:mysql://127.0.0.1:3306/coffee_machine_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: Manvswild@123
     driver-class-name: com.mysql.cj.jdbc.Driver

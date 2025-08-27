@@ -4,10 +4,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Entity representing a user in the coffee machine monitoring system.
@@ -23,10 +19,6 @@ import lombok.ToString;
            @Index(name = "idx_user_facility", columnList = "facility_id"),
            @Index(name = "idx_user_role", columnList = "role")
        })
-@Getter
-@Setter
-@NoArgsConstructor
-@ToString(exclude = {"passwordHash"})
 public class User extends BaseEntity {
 
     /**
@@ -66,6 +58,9 @@ public class User extends BaseEntity {
     /**
      * Constructor for creating a new user.
      */
+    public User() {
+    }
+
     public User(String username, String passwordHash, UserRole role) {
         this.username = username;
         this.passwordHash = passwordHash;
@@ -79,6 +74,38 @@ public class User extends BaseEntity {
         this.username = username;
         this.passwordHash = passwordHash;
         this.role = role;
+        this.facility = facility;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
+    }
+
+    public Facility getFacility() {
+        return facility;
+    }
+
+    public void setFacility(Facility facility) {
         this.facility = facility;
     }
 
