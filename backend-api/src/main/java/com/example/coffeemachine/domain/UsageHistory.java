@@ -2,7 +2,6 @@ package com.example.coffeemachine.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.*;
 
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
@@ -21,10 +20,6 @@ import java.math.BigDecimal;
            @Index(name = "idx_usage_brew_type", columnList = "brew_type"),
            @Index(name = "idx_usage_machine_timestamp", columnList = "machine_id, timestamp")
        })
-@Getter
-@Setter
-@NoArgsConstructor
-@ToString(exclude = {"machine"})
 public class UsageHistory extends BaseEntity {
 
     /**
@@ -76,6 +71,9 @@ public class UsageHistory extends BaseEntity {
     /**
      * Constructor for creating a new usage history record.
      */
+    public UsageHistory() {
+    }
+
     public UsageHistory(CoffeeMachine machine, LocalDateTime timestamp, BrewType brewType) {
         this.machine = machine;
         this.timestamp = timestamp;
@@ -190,4 +188,16 @@ public class UsageHistory extends BaseEntity {
             case AMERICANO -> 10;
         };
     }
+
+    // Manual accessors
+    public CoffeeMachine getMachine() { return machine; }
+    public void setMachine(CoffeeMachine machine) { this.machine = machine; }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+    public BrewType getBrewType() { return brewType; }
+    public void setBrewType(BrewType brewType) { this.brewType = brewType; }
+    public Integer getVolumeMl() { return volumeMl; }
+    public void setVolumeMl(Integer volumeMl) { this.volumeMl = volumeMl; }
+    public BigDecimal getTempAtBrew() { return tempAtBrew; }
+    public void setTempAtBrew(BigDecimal tempAtBrew) { this.tempAtBrew = tempAtBrew; }
 }

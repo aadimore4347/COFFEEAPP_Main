@@ -2,10 +2,6 @@ package com.example.coffeemachine.domain;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +20,6 @@ import java.math.BigDecimal;
            @Index(name = "idx_machine_status", columnList = "status"),
            @Index(name = "idx_machine_levels", columnList = "water_level, milk_level, beans_level")
        })
-@Getter
-@Setter
-@NoArgsConstructor
-@ToString(exclude = {"facility", "usageHistory", "alerts"})
 public class CoffeeMachine extends BaseEntity {
 
     /**
@@ -109,6 +101,9 @@ public class CoffeeMachine extends BaseEntity {
     /**
      * Constructor for creating a new coffee machine.
      */
+    public CoffeeMachine() {
+    }
+
     public CoffeeMachine(Facility facility) {
         this.facility = facility;
         this.status = MachineStatus.OFF;
@@ -239,4 +234,22 @@ public class CoffeeMachine extends BaseEntity {
                (milkLevel == null || milkLevel >= threshold) &&
                (beansLevel == null || beansLevel >= threshold);
     }
+
+    // Manual accessors
+    public Facility getFacility() { return facility; }
+    public void setFacility(Facility facility) { this.facility = facility; }
+    public MachineStatus getStatus() { return status; }
+    public void setStatus(MachineStatus status) { this.status = status; }
+    public BigDecimal getTemperature() { return temperature; }
+    public void setTemperature(BigDecimal temperature) { this.temperature = temperature; }
+    public Integer getWaterLevel() { return waterLevel; }
+    public void setWaterLevel(Integer waterLevel) { this.waterLevel = waterLevel; }
+    public Integer getMilkLevel() { return milkLevel; }
+    public void setMilkLevel(Integer milkLevel) { this.milkLevel = milkLevel; }
+    public Integer getBeansLevel() { return beansLevel; }
+    public void setBeansLevel(Integer beansLevel) { this.beansLevel = beansLevel; }
+    public List<UsageHistory> getUsageHistory() { return usageHistory; }
+    public void setUsageHistory(List<UsageHistory> usageHistory) { this.usageHistory = usageHistory != null ? usageHistory : new ArrayList<>(); }
+    public List<Alert> getAlerts() { return alerts; }
+    public void setAlerts(List<Alert> alerts) { this.alerts = alerts != null ? alerts : new ArrayList<>(); }
 }

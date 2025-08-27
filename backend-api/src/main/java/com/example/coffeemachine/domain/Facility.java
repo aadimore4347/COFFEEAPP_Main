@@ -3,10 +3,6 @@ package com.example.coffeemachine.domain;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,10 +16,6 @@ import java.util.List;
 @Entity
 @Table(name = "facility", 
        uniqueConstraints = @UniqueConstraint(columnNames = "name"))
-@Getter
-@Setter
-@NoArgsConstructor
-@ToString(exclude = {"coffeeMachines", "users"})
 public class Facility extends BaseEntity {
 
     /**
@@ -65,6 +57,9 @@ public class Facility extends BaseEntity {
     /**
      * Constructor for creating a new facility.
      */
+    public Facility() {
+    }
+
     public Facility(String name, String location) {
         this.name = name;
         this.location = location;
@@ -130,5 +125,38 @@ public class Facility extends BaseEntity {
         return coffeeMachines.stream()
                 .filter(machine -> machine.isActive() && machine.getStatus() == MachineStatus.ON)
                 .count();
+    }
+
+    // Manual accessors
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public List<CoffeeMachine> getCoffeeMachines() {
+        return coffeeMachines;
+    }
+
+    public void setCoffeeMachines(List<CoffeeMachine> coffeeMachines) {
+        this.coffeeMachines = coffeeMachines != null ? coffeeMachines : new ArrayList<>();
+    }
+
+    public List<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<User> users) {
+        this.users = users != null ? users : new ArrayList<>();
     }
 }
