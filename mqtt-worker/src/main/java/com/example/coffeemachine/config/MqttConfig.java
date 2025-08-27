@@ -1,0 +1,114 @@
+package com.example.coffeemachine.config;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.core.MessageProducer;
+import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
+import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
+import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
+import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageHandler;
+import org.springframework.web.reactive.function.client.WebClient;
+
+@Configuration
+@RequiredArgsConstructor
+@Slf4j
+public class MqttConfig {
+
+    @Value("${spring.mqtt.broker.url}")
+    private String brokerUrl;
+
+    @Value("${spring.mqtt.broker.client-id}")
+    private String clientId;
+
+    @Value("${spring.mqtt.broker.username:}")
+    private String username;
+
+    @Value("${spring.mqtt.broker.password:}")
+    private String password;
+
+    @Bean
+    public MqttPahoClientFactory mqttClientFactory() {
+        DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
+        MqttConnectOptions options = new MqttConnectOptions();
+        
+        options.setServerURIs(new String[]{brokerUrl});
+        options.setCleanSession(true);
+        options.setConnectionTimeout(30);
+        options.setKeepAliveInterval(60);
+        
+        if (username != null && !username.isEmpty()) {
+            options.setUserName(username);
+            options.setPassword(password.toCharArray());
+        }
+        
+        factory.setConnectionOptions(options);
+        return factory;
+    }
+
+    @Bean
+    public MessageChannel mqttInputChannel() {
+        return new DirectChannel();
+    }
+
+    @Bean
+    public MessageProducer inbound() {
+        MqttPahoMessageDrivenChannelAdapter adapter = 
+            new MqttPahoMessageDrivenChannelAdapter(
+                clientId + "-inbound", 
+                mqttClientFactory(),
+                "coffeeMachine/+/temperature",
+                "coffeeMachine/+/waterLevel",
+                "coffeeMachine/+/milkLevel",
+                "coffeeMachine/+/beansLevel",
+                "coffeeMachine/+/status",
+                "coffeeMachine/+/usage"
+            );
+
+        adapter.setCompletionTimeout(5000);
+        adapter.setConverter(new DefaultPahoMessageConverter());
+        adapter.setQos(1);
+        adapter.setOutputChannel(mqttInputChannel());
+        
+        return adapter;
+    }
+
+    @Bean
+    @ServiceActivator(inputChannel = "mqttInputChannel")
+    public MessageHandler handler() {
+        return message -> {
+            String topic = message.getHeaders().get("mqtt_topic").toString();
+            String payload = new String((byte[]) message.getPayload());
+            
+            log.info("Received MQTT message on topic: {} with payload: {}", topic, payload);
+            
+            // Extract machine ID from topic (e.g., coffeeMachine/123/temperature -> 123)
+            String[] topicParts = topic.split("/");
+            if (topicParts.length >= 2) {
+                String machineId = topicParts[1];
+                String metricType = topicParts[2];
+                
+                // Route to appropriate handler based on metric type
+                routeMessage(machineId, metricType, payload);
+            }
+        };
+    }
+
+    @Bean
+    public WebClient webClient() {
+        return WebClient.builder().build();
+    }
+
+    private void routeMessage(String machineId, String metricType, String payload) {
+        // This will be handled by the MqttMessageHandler
+        // The routing logic is implemented there
+        log.debug("Routing message for machine {} metric {}: {}", machineId, metricType, payload);
+    }
+}
