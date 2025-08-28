@@ -1,20 +1,21 @@
-package com.example.coffeemachine.mqtt.dto;
+package com.example.coffeemachine.service.dto;
 
-public class MachineLevelsUpdate {
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+
+public class MachineLevelsUpdateRequest {
+    @NotNull
     private Long machineId;
+
+    @Min(0) @Max(100)
     private Integer waterLevel;
+
+    @Min(0) @Max(100)
     private Integer milkLevel;
+
+    @Min(0) @Max(100)
     private Integer beansLevel;
-
-    public MachineLevelsUpdate() {
-    }
-
-    public MachineLevelsUpdate(Long machineId, Integer waterLevel, Integer milkLevel, Integer beansLevel) {
-        this.machineId = machineId;
-        this.waterLevel = waterLevel;
-        this.milkLevel = milkLevel;
-        this.beansLevel = beansLevel;
-    }
 
     public Long getMachineId() {
         return machineId;

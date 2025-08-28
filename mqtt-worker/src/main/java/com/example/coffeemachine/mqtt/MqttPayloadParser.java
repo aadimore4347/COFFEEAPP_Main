@@ -1,15 +1,17 @@
 package com.example.coffeemachine.mqtt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.Map;
 
 @Component
-@Slf4j
 public class MqttPayloadParser {
+
+    private static final Logger log = LoggerFactory.getLogger(MqttPayloadParser.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

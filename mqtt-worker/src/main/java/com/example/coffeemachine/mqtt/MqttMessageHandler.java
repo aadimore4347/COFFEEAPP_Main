@@ -4,8 +4,8 @@ import com.example.coffeemachine.mqtt.dto.MachineStatusUpdate;
 import com.example.coffeemachine.mqtt.dto.MachineLevelsUpdate;
 import com.example.coffeemachine.mqtt.dto.MachineUsageEvent;
 import com.example.coffeemachine.mqtt.dto.MachineAlertEvent;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,12 +15,17 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class MqttMessageHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(MqttMessageHandler.class);
 
     private final WebClient webClient;
     private final MqttPayloadParser payloadParser;
+
+    public MqttMessageHandler(WebClient webClient, MqttPayloadParser payloadParser) {
+        this.webClient = webClient;
+        this.payloadParser = payloadParser;
+    }
 
     @Value("${backend.api.base-url}")
     private String backendApiBaseUrl;
@@ -29,10 +34,9 @@ public class MqttMessageHandler {
         try {
             BigDecimal temperature = payloadParser.parseTemperature(payload);
             if (temperature != null) {
-                MachineStatusUpdate update = MachineStatusUpdate.builder()
-                    .machineId(Long.valueOf(machineId))
-                    .temperature(temperature)
-                    .build();
+                MachineStatusUpdate update = new MachineStatusUpdate();
+                update.setMachineId(Long.valueOf(machineId));
+                update.setTemperature(temperature);
                 
                 updateMachineStatus(update);
             }
@@ -45,10 +49,9 @@ public class MqttMessageHandler {
         try {
             Integer waterLevel = payloadParser.parseLevel(payload);
             if (waterLevel != null) {
-                MachineLevelsUpdate update = MachineLevelsUpdate.builder()
-                    .machineId(Long.valueOf(machineId))
-                    .waterLevel(waterLevel)
-                    .build();
+                MachineLevelsUpdate update = new MachineLevelsUpdate();
+                update.setMachineId(Long.valueOf(machineId));
+                update.setWaterLevel(waterLevel);
                 
                 updateMachineLevels(update);
             }
@@ -61,10 +64,9 @@ public class MqttMessageHandler {
         try {
             Integer milkLevel = payloadParser.parseLevel(payload);
             if (milkLevel != null) {
-                MachineLevelsUpdate update = MachineLevelsUpdate.builder()
-                    .machineId(Long.valueOf(machineId))
-                    .milkLevel(milkLevel)
-                    .build();
+                MachineLevelsUpdate update = new MachineLevelsUpdate();
+                update.setMachineId(Long.valueOf(machineId));
+                update.setMilkLevel(milkLevel);
                 
                 updateMachineLevels(update);
             }
@@ -77,10 +79,9 @@ public class MqttMessageHandler {
         try {
             Integer beansLevel = payloadParser.parseLevel(payload);
             if (beansLevel != null) {
-                MachineLevelsUpdate update = MachineLevelsUpdate.builder()
-                    .machineId(Long.valueOf(machineId))
-                    .beansLevel(beansLevel)
-                    .build();
+                MachineLevelsUpdate update = new MachineLevelsUpdate();
+                update.setMachineId(Long.valueOf(machineId));
+                update.setBeansLevel(beansLevel);
                 
                 updateMachineLevels(update);
             }
@@ -93,10 +94,9 @@ public class MqttMessageHandler {
         try {
             String status = payloadParser.parseStatus(payload);
             if (status != null) {
-                MachineStatusUpdate update = MachineStatusUpdate.builder()
-                    .machineId(Long.valueOf(machineId))
-                    .status(status)
-                    .build();
+                MachineStatusUpdate update = new MachineStatusUpdate();
+                update.setMachineId(Long.valueOf(machineId));
+                update.setStatus(status);
                 
                 updateMachineStatus(update);
             }
@@ -109,12 +109,11 @@ public class MqttMessageHandler {
         try {
             MqttPayloadParser.UsageEvent usageEvent = payloadParser.parseUsageEvent(payload);
             if (usageEvent != null) {
-                MachineUsageEvent event = MachineUsageEvent.builder()
-                    .machineId(Long.valueOf(machineId))
-                    .brewType(usageEvent.brewType())
-                    .volumeMl(usageEvent.volumeMl())
-                    .tempAtBrew(usageEvent.tempAtBrew())
-                    .build();
+                MachineUsageEvent event = new MachineUsageEvent();
+                event.setMachineId(Long.valueOf(machineId));
+                event.setBrewType(usageEvent.brewType());
+                event.setVolumeMl(usageEvent.volumeMl());
+                event.setTempAtBrew(usageEvent.tempAtBrew());
                 
                 recordMachineUsage(event);
             }

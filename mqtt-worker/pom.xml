@@ -20,6 +20,7 @@
 
     <properties>
         <java.version>17</java.version>
+        <lombok.version>1.18.30</lombok.version>
         <eclipse.paho.version>1.2.5</eclipse.paho.version>
         <spring.integration.version>6.1.2</spring.integration.version>
     </properties>
@@ -54,12 +55,7 @@
             <version>${eclipse.paho.version}</version>
         </dependency>
 
-        <!-- Lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
+        <!-- Lombok removed per project policy -->
 
         <!-- Test Dependencies -->
         <dependency>
@@ -97,13 +93,7 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
+                    <!-- No annotation processors required -->
                 </configuration>
             </plugin>
         </plugins>

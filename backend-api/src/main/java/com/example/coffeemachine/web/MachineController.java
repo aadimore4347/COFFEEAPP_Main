@@ -21,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * REST controller for coffee machine operations.
@@ -107,6 +108,76 @@ public class MachineController {
         List<UsageHistoryDto> historyDtos = usageHistoryMapper.toDto(history);
         
         return ResponseEntity.ok(ApiResponse.success(historyDtos, "Machine history retrieved successfully"));
+    }
+
+    /**
+     * Update machine status/temperature from MQTT worker.
+     */
+    @PostMapping("/{machineId}/status")
+    @Operation(summary = "Update machine status", description = "Update status and/or temperature from MQTT worker")
+    public ResponseEntity<ApiResponse<CoffeeMachineDto>> updateStatus(
+            @PathVariable Long machineId,
+            @Valid @RequestBody com.example.coffeemachine.service.dto.MachineStatusUpdateRequest request) {
+        if (!machineId.equals(request.getMachineId())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Machine ID mismatch", "MACHINE_ID_MISMATCH"));
+        }
+
+        Optional<CoffeeMachine> updated = Optional.empty();
+        if (request.getTemperature() != null) {
+            updated = coffeeMachineService.updateTemperature(machineId, request.getTemperature().doubleValue());
+        }
+        if (request.getStatus() != null) {
+            updated = coffeeMachineService.updateStatus(machineId, request.getStatus());
+        }
+
+        return updated
+            .map(machine -> ResponseEntity.ok(ApiResponse.success(coffeeMachineMapper.toDto(machine), "Status updated")))
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Update machine levels from MQTT worker.
+     */
+    @PostMapping("/{machineId}/levels")
+    @Operation(summary = "Update machine levels", description = "Update water/milk/beans levels from MQTT worker")
+    public ResponseEntity<ApiResponse<CoffeeMachineDto>> updateLevels(
+            @PathVariable Long machineId,
+            @Valid @RequestBody com.example.coffeemachine.service.dto.MachineLevelsUpdateRequest request) {
+        if (!machineId.equals(request.getMachineId())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Machine ID mismatch", "MACHINE_ID_MISMATCH"));
+        }
+
+        Optional<CoffeeMachine> last = Optional.empty();
+        if (request.getWaterLevel() != null) {
+            last = coffeeMachineService.updateWaterLevel(machineId, request.getWaterLevel());
+        }
+        if (request.getMilkLevel() != null) {
+            last = coffeeMachineService.updateMilkLevel(machineId, request.getMilkLevel());
+        }
+        if (request.getBeansLevel() != null) {
+            last = coffeeMachineService.updateBeansLevel(machineId, request.getBeansLevel());
+        }
+
+        return last
+            .map(machine -> ResponseEntity.ok(ApiResponse.success(coffeeMachineMapper.toDto(machine), "Levels updated")))
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Record usage event from MQTT worker.
+     */
+    @PostMapping("/{machineId}/history")
+    @Operation(summary = "Record usage", description = "Record a brew usage event from MQTT worker")
+    public ResponseEntity<ApiResponse<String>> recordUsage(
+            @PathVariable Long machineId,
+            @Valid @RequestBody com.example.coffeemachine.service.dto.MachineUsageEventRequest request) {
+        if (!machineId.equals(request.getMachineId())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Machine ID mismatch", "MACHINE_ID_MISMATCH"));
+        }
+
+        return coffeeMachineService.recordBrewing(machineId, request.getBrewType(), request.getVolumeMl())
+                .map(u -> ResponseEntity.ok(ApiResponse.success("Recorded", "Usage recorded")))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**

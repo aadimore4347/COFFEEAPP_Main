@@ -1,20 +1,16 @@
-package com.example.coffeemachine.mqtt.dto;
+package com.example.coffeemachine.service.dto;
 
+import com.example.coffeemachine.domain.MachineStatus;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
-public class MachineStatusUpdate {
+public class MachineStatusUpdateRequest {
+    @NotNull
     private Long machineId;
-    private String status;
+
+    private MachineStatus status;
+
     private BigDecimal temperature;
-
-    public MachineStatusUpdate() {
-    }
-
-    public MachineStatusUpdate(Long machineId, String status, BigDecimal temperature) {
-        this.machineId = machineId;
-        this.status = status;
-        this.temperature = temperature;
-    }
 
     public Long getMachineId() {
         return machineId;
@@ -24,11 +20,11 @@ public class MachineStatusUpdate {
         this.machineId = machineId;
     }
 
-    public String getStatus() {
+    public MachineStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(MachineStatus status) {
         this.status = status;
     }
 

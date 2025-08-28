@@ -1,7 +1,7 @@
 package com.example.coffeemachine.config;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,9 +18,9 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
-@RequiredArgsConstructor
-@Slf4j
 public class MqttConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(MqttConfig.class);
 
     @Value("${spring.mqtt.broker.url}")
     private String brokerUrl;
@@ -33,6 +33,12 @@ public class MqttConfig {
 
     @Value("${spring.mqtt.broker.password:}")
     private String password;
+
+    private final com.example.coffeemachine.mqtt.MqttMessageHandler mqttMessageHandler;
+
+    public MqttConfig(com.example.coffeemachine.mqtt.MqttMessageHandler mqttMessageHandler) {
+        this.mqttMessageHandler = mqttMessageHandler;
+    }
 
     @Bean
     public MqttPahoClientFactory mqttClientFactory() {
@@ -91,12 +97,24 @@ public class MqttConfig {
             
             // Extract machine ID from topic (e.g., coffeeMachine/123/temperature -> 123)
             String[] topicParts = topic.split("/");
-            if (topicParts.length >= 2) {
+            if (topicParts.length >= 3) {
                 String machineId = topicParts[1];
                 String metricType = topicParts[2];
                 
                 // Route to appropriate handler based on metric type
-                routeMessage(machineId, metricType, payload);
+                try {
+                    switch (metricType) {
+                        case "temperature" -> mqttMessageHandler.handleTemperatureUpdate(machineId, payload);
+                        case "waterLevel" -> mqttMessageHandler.handleWaterLevelUpdate(machineId, payload);
+                        case "milkLevel" -> mqttMessageHandler.handleMilkLevelUpdate(machineId, payload);
+                        case "beansLevel" -> mqttMessageHandler.handleBeansLevelUpdate(machineId, payload);
+                        case "status" -> mqttMessageHandler.handleStatusUpdate(machineId, payload);
+                        case "usage" -> mqttMessageHandler.handleUsageEvent(machineId, payload);
+                        default -> log.debug("Unknown metric type {} for topic {}", metricType, topic);
+                    }
+                } catch (Exception ex) {
+                    log.warn("Failed to route message for machine {} metric {}: {}", machineId, metricType, ex.getMessage());
+                }
             }
         };
     }
@@ -106,9 +124,5 @@ public class MqttConfig {
         return WebClient.builder().build();
     }
 
-    private void routeMessage(String machineId, String metricType, String payload) {
-        // This will be handled by the MqttMessageHandler
-        // The routing logic is implemented there
-        log.debug("Routing message for machine {} metric {}: {}", machineId, metricType, payload);
-    }
+    // routing is handled inline in handler()
 }
