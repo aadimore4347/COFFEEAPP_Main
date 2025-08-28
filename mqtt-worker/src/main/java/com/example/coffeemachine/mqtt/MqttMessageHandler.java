@@ -4,8 +4,8 @@ import com.example.coffeemachine.mqtt.dto.MachineStatusUpdate;
 import com.example.coffeemachine.mqtt.dto.MachineLevelsUpdate;
 import com.example.coffeemachine.mqtt.dto.MachineUsageEvent;
 import com.example.coffeemachine.mqtt.dto.MachineAlertEvent;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,12 +15,17 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class MqttMessageHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(MqttMessageHandler.class);
 
     private final WebClient webClient;
     private final MqttPayloadParser payloadParser;
+
+    public MqttMessageHandler(WebClient webClient, MqttPayloadParser payloadParser) {
+        this.webClient = webClient;
+        this.payloadParser = payloadParser;
+    }
 
     @Value("${backend.api.base-url}")
     private String backendApiBaseUrl;
