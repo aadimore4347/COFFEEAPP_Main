@@ -24,9 +24,27 @@ backend:
       machine-history: /api/machine/{id}/history
       machine-alerts: /api/machine/{id}/alerts
 
+# Simulator Configuration for Testing
+simulator:
+  enabled: true
+  interval-ms: 1000  # Fast interval for testing
+  machines: 3  # Fewer machines for testing
+  
+  decrease-rates:
+    water: 2.0    # Faster decrease for testing
+    milk: 1.0     # Faster decrease for testing
+    beans: 0.6    # Faster decrease for testing
+  
+  temperature:
+    variation: 1.0  # Smaller variation for testing
+  
+  usage:
+    probability: 0.5  # Higher probability for testing
+
 logging:
   level:
     com.example.coffeemachine: DEBUG
+    com.example.coffeemachine.simulator: DEBUG
     org.springframework.integration: DEBUG
     org.eclipse.paho: INFO
   pattern:
