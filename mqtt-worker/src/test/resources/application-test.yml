@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: coffee-machine-mqtt-worker-test
+  mqtt:
+    broker:
+      url: tcp://localhost:1883
+      client-id: coffee-machine-mqtt-worker-test
+      username: 
+      password: 
+    topics:
+      temperature: coffeeMachine/+/temperature
+      water-level: coffeeMachine/+/waterLevel
+      milk-level: coffeeMachine/+/milkLevel
+      beans-level: coffeeMachine/+/beansLevel
+      status: coffeeMachine/+/status
+      usage: coffeeMachine/+/usage
+
+backend:
+  api:
+    base-url: http://localhost:8080
+    endpoints:
+      machine-status: /api/machine/{id}/status
+      machine-levels: /api/machine/{id}/levels
+      machine-history: /api/machine/{id}/history
+      machine-alerts: /api/machine/{id}/alerts
+
+logging:
+  level:
+    com.example.coffeemachine: DEBUG
+    org.springframework.integration: DEBUG
+    org.eclipse.paho: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

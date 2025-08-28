@@ -84,19 +84,31 @@ public class MqttConfig {
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public MessageHandler handler() {
         return message -> {
-            String topic = message.getHeaders().get("mqtt_topic").toString();
-            String payload = new String((byte[]) message.getPayload());
-            
-            log.info("Received MQTT message on topic: {} with payload: {}", topic, payload);
-            
-            // Extract machine ID from topic (e.g., coffeeMachine/123/temperature -> 123)
-            String[] topicParts = topic.split("/");
-            if (topicParts.length >= 2) {
-                String machineId = topicParts[1];
-                String metricType = topicParts[2];
+            try {
+                Object topicHeader = message.getHeaders().get("mqtt_topic");
+                if (topicHeader == null) {
+                    log.warn("Received MQTT message without topic header");
+                    return;
+                }
                 
-                // Route to appropriate handler based on metric type
-                routeMessage(machineId, metricType, payload);
+                String topic = topicHeader.toString();
+                String payload = new String((byte[]) message.getPayload());
+                
+                log.info("Received MQTT message on topic: {} with payload: {}", topic, payload);
+                
+                // Extract machine ID from topic (e.g., coffeeMachine/123/temperature -> 123)
+                String[] topicParts = topic.split("/");
+                if (topicParts.length >= 3) {
+                    String machineId = topicParts[1];
+                    String metricType = topicParts[2];
+                    
+                    // Route to appropriate handler based on metric type
+                    routeMessage(machineId, metricType, payload);
+                } else {
+                    log.warn("Invalid topic format: {}", topic);
+                }
+            } catch (Exception e) {
+                log.error("Error processing MQTT message: {}", e.getMessage(), e);
             }
         };
     }

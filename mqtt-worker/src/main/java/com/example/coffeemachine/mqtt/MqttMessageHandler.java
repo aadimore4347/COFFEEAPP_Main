@@ -27,6 +27,11 @@ public class MqttMessageHandler {
 
     public void handleTemperatureUpdate(String machineId, String payload) {
         try {
+            if (machineId == null || machineId.trim().isEmpty()) {
+                log.warn("Invalid machine ID for temperature update: {}", machineId);
+                return;
+            }
+            
             BigDecimal temperature = payloadParser.parseTemperature(payload);
             if (temperature != null) {
                 MachineStatusUpdate update = MachineStatusUpdate.builder()
@@ -35,7 +40,11 @@ public class MqttMessageHandler {
                     .build();
                 
                 updateMachineStatus(update);
+            } else {
+                log.warn("Failed to parse temperature from payload: {}", payload);
             }
+        } catch (NumberFormatException e) {
+            log.error("Invalid machine ID format for temperature update: {}", machineId);
         } catch (Exception e) {
             log.error("Error handling temperature update for machine {}: {}", machineId, e.getMessage());
         }
@@ -43,6 +52,11 @@ public class MqttMessageHandler {
 
     public void handleWaterLevelUpdate(String machineId, String payload) {
         try {
+            if (machineId == null || machineId.trim().isEmpty()) {
+                log.warn("Invalid machine ID for water level update: {}", machineId);
+                return;
+            }
+            
             Integer waterLevel = payloadParser.parseLevel(payload);
             if (waterLevel != null) {
                 MachineLevelsUpdate update = MachineLevelsUpdate.builder()
@@ -51,7 +65,11 @@ public class MqttMessageHandler {
                     .build();
                 
                 updateMachineLevels(update);
+            } else {
+                log.warn("Failed to parse water level from payload: {}", payload);
             }
+        } catch (NumberFormatException e) {
+            log.error("Invalid machine ID format for water level update: {}", machineId);
         } catch (Exception e) {
             log.error("Error handling water level update for machine {}: {}", machineId, e.getMessage());
         }
@@ -59,6 +77,11 @@ public class MqttMessageHandler {
 
     public void handleMilkLevelUpdate(String machineId, String payload) {
         try {
+            if (machineId == null || machineId.trim().isEmpty()) {
+                log.warn("Invalid machine ID for milk level update: {}", machineId);
+                return;
+            }
+            
             Integer milkLevel = payloadParser.parseLevel(payload);
             if (milkLevel != null) {
                 MachineLevelsUpdate update = MachineLevelsUpdate.builder()
@@ -67,7 +90,11 @@ public class MqttMessageHandler {
                     .build();
                 
                 updateMachineLevels(update);
+            } else {
+                log.warn("Failed to parse milk level from payload: {}", payload);
             }
+        } catch (NumberFormatException e) {
+            log.error("Invalid machine ID format for milk level update: {}", machineId);
         } catch (Exception e) {
             log.error("Error handling milk level update for machine {}: {}", machineId, e.getMessage());
         }
@@ -75,6 +102,11 @@ public class MqttMessageHandler {
 
     public void handleBeansLevelUpdate(String machineId, String payload) {
         try {
+            if (machineId == null || machineId.trim().isEmpty()) {
+                log.warn("Invalid machine ID for beans level update: {}", machineId);
+                return;
+            }
+            
             Integer beansLevel = payloadParser.parseLevel(payload);
             if (beansLevel != null) {
                 MachineLevelsUpdate update = MachineLevelsUpdate.builder()
@@ -83,7 +115,11 @@ public class MqttMessageHandler {
                     .build();
                 
                 updateMachineLevels(update);
+            } else {
+                log.warn("Failed to parse beans level from payload: {}", payload);
             }
+        } catch (NumberFormatException e) {
+            log.error("Invalid machine ID format for beans level update: {}", machineId);
         } catch (Exception e) {
             log.error("Error handling beans level update for machine {}: {}", machineId, e.getMessage());
         }
@@ -91,6 +127,11 @@ public class MqttMessageHandler {
 
     public void handleStatusUpdate(String machineId, String payload) {
         try {
+            if (machineId == null || machineId.trim().isEmpty()) {
+                log.warn("Invalid machine ID for status update: {}", machineId);
+                return;
+            }
+            
             String status = payloadParser.parseStatus(payload);
             if (status != null) {
                 MachineStatusUpdate update = MachineStatusUpdate.builder()
@@ -99,7 +140,11 @@ public class MqttMessageHandler {
                     .build();
                 
                 updateMachineStatus(update);
+            } else {
+                log.warn("Failed to parse status from payload: {}", payload);
             }
+        } catch (NumberFormatException e) {
+            log.error("Invalid machine ID format for status update: {}", machineId);
         } catch (Exception e) {
             log.error("Error handling status update for machine {}: {}", machineId, e.getMessage());
         }
@@ -107,6 +152,11 @@ public class MqttMessageHandler {
 
     public void handleUsageEvent(String machineId, String payload) {
         try {
+            if (machineId == null || machineId.trim().isEmpty()) {
+                log.warn("Invalid machine ID for usage event: {}", machineId);
+                return;
+            }
+            
             MqttPayloadParser.UsageEvent usageEvent = payloadParser.parseUsageEvent(payload);
             if (usageEvent != null) {
                 MachineUsageEvent event = MachineUsageEvent.builder()
@@ -117,42 +167,70 @@ public class MqttMessageHandler {
                     .build();
                 
                 recordMachineUsage(event);
+            } else {
+                log.warn("Failed to parse usage event from payload: {}", payload);
             }
+        } catch (NumberFormatException e) {
+            log.error("Invalid machine ID format for usage event: {}", machineId);
         } catch (Exception e) {
             log.error("Error handling usage event for machine {}: {}", machineId, e.getMessage());
         }
     }
 
     private void updateMachineStatus(MachineStatusUpdate update) {
-        webClient.post()
-            .uri(backendApiBaseUrl + "/api/machine/{id}/status", update.getMachineId())
-            .bodyValue(update)
-            .retrieve()
-            .bodyToMono(Void.class)
-            .doOnSuccess(result -> log.info("Successfully updated status for machine {}", update.getMachineId()))
-            .doOnError(error -> log.error("Failed to update status for machine {}: {}", update.getMachineId(), error.getMessage()))
-            .subscribe();
+        try {
+            webClient.post()
+                .uri(backendApiBaseUrl + "/api/machine/{id}/status", update.getMachineId())
+                .bodyValue(update)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .doOnSuccess(result -> log.info("Successfully updated status for machine {}", update.getMachineId()))
+                .doOnError(error -> log.error("Failed to update status for machine {}: {}", update.getMachineId(), error.getMessage()))
+                .onErrorResume(error -> {
+                    log.error("Error updating machine status for machine {}: {}", update.getMachineId(), error.getMessage());
+                    return Mono.empty();
+                })
+                .subscribe();
+        } catch (Exception e) {
+            log.error("Exception while updating machine status for machine {}: {}", update.getMachineId(), e.getMessage());
+        }
     }
 
     private void updateMachineLevels(MachineLevelsUpdate update) {
-        webClient.post()
-            .uri(backendApiBaseUrl + "/api/machine/{id}/levels", update.getMachineId())
-            .bodyValue(update)
-            .retrieve()
-            .bodyToMono(Void.class)
-            .doOnSuccess(result -> log.info("Successfully updated levels for machine {}", update.getMachineId()))
-            .doOnError(error -> log.error("Failed to update levels for machine {}: {}", update.getMachineId(), error.getMessage()))
-            .subscribe();
+        try {
+            webClient.post()
+                .uri(backendApiBaseUrl + "/api/machine/{id}/levels", update.getMachineId())
+                .bodyValue(update)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .doOnSuccess(result -> log.info("Successfully updated levels for machine {}", update.getMachineId()))
+                .doOnError(error -> log.error("Failed to update levels for machine {}: {}", update.getMachineId(), error.getMessage()))
+                .onErrorResume(error -> {
+                    log.error("Error updating machine levels for machine {}: {}", update.getMachineId(), error.getMessage());
+                    return Mono.empty();
+                })
+                .subscribe();
+        } catch (Exception e) {
+            log.error("Exception while updating machine levels for machine {}: {}", update.getMachineId(), e.getMessage());
+        }
     }
 
     private void recordMachineUsage(MachineUsageEvent event) {
-        webClient.post()
-            .uri(backendApiBaseUrl + "/api/machine/{id}/history", event.getMachineId())
-            .bodyValue(event)
-            .retrieve()
-            .bodyToMono(Void.class)
-            .doOnSuccess(result -> log.info("Successfully recorded usage for machine {}", event.getMachineId()))
-            .doOnError(error -> log.error("Failed to record usage for machine {}: {}", event.getMachineId(), error.getMessage()))
-            .subscribe();
+        try {
+            webClient.post()
+                .uri(backendApiBaseUrl + "/api/machine/{id}/history", event.getMachineId())
+                .bodyValue(event)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .doOnSuccess(result -> log.info("Successfully recorded usage for machine {}", event.getMachineId()))
+                .doOnError(error -> log.error("Failed to record usage for machine {}: {}", event.getMachineId(), error.getMessage()))
+                .onErrorResume(error -> {
+                    log.error("Error recording machine usage for machine {}: {}", event.getMachineId(), error.getMessage());
+                    return Mono.empty();
+                })
+                .subscribe();
+        } catch (Exception e) {
+            log.error("Exception while recording machine usage for machine {}: {}", event.getMachineId(), e.getMessage());
+        }
     }
 }

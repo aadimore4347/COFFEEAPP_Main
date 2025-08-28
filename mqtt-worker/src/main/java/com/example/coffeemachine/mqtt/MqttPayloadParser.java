@@ -33,7 +33,17 @@ public class MqttPayloadParser {
         try {
             if (payload.trim().startsWith("{")) {
                 Map<String, Object> json = objectMapper.readValue(payload, Map.class);
+                // Check for different level field names
                 Object levelValue = json.get("level");
+                if (levelValue == null) {
+                    levelValue = json.get("waterLevel");
+                }
+                if (levelValue == null) {
+                    levelValue = json.get("milkLevel");
+                }
+                if (levelValue == null) {
+                    levelValue = json.get("beansLevel");
+                }
                 if (levelValue != null) {
                     int level = Integer.parseInt(levelValue.toString());
                     return Math.max(0, Math.min(100, level));
