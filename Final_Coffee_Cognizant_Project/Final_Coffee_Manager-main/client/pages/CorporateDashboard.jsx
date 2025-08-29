@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 import AddMachineModal from "@/components/AddMachineModal";
 import DeleteMachineDialog from "@/components/DeleteMachineDialog";
+import RealTimeAnalytics from "@/components/RealTimeAnalytics";
 import { toast } from "sonner";
 import { SUCCESS_MESSAGES } from "@/config";
 
@@ -538,6 +539,163 @@ export default function CorporateDashboard() {
 
     loadData();
   }, []);
+
+  // Enhanced functionality: Backend and MQTT integration
+  useEffect(() => {
+    const initializeBackendIntegration = async () => {
+      try {
+        // Check backend connection
+        const isBackendConnected = await backendAPI.checkConnection();
+        setBackendConnectionStatus(isBackendConnected ? 'connected' : 'disconnected');
+        
+        if (isBackendConnected) {
+          console.log('✅ Backend API connected successfully');
+          
+          // Load real data from backend if available
+          try {
+            const backendMachines = await backendAPI.getMachines();
+            if (backendMachines && backendMachines.length > 0) {
+              console.log('✅ Loaded machines from backend:', backendMachines.length);
+              // Merge backend data with existing data
+              // This would need to be implemented based on your data structure
+            }
+          } catch (error) {
+            console.warn('Failed to load machines from backend:', error);
+          }
+        } else {
+          console.warn('⚠️ Backend API not available, using demo mode');
+        }
+      } catch (error) {
+        console.error('Backend integration error:', error);
+        setBackendConnectionStatus('error');
+      }
+    };
+
+    // Initialize MQTT real-time connection
+    const initializeMQTT = () => {
+      try {
+        realTimeMQTT.connect();
+        
+        // Subscribe to MQTT topics for real-time updates
+        realTimeMQTT.subscribe('simulator:stats', (data) => {
+          setSimulatorStats(data);
+          console.log('📊 MQTT Simulator stats updated:', data);
+        });
+
+        // Subscribe to individual machine updates
+        realTimeMQTT.subscribe('coffeeMachine/+/update', (data) => {
+          setRealtimeUpdates(prev => new Map(prev.set(data.machineId, data)));
+          console.log('🔄 Machine update received:', data);
+        });
+
+        // Subscribe to connection status
+        realTimeMQTT.subscribe('connection', (data) => {
+          setMqttConnectionStatus(data.status);
+          console.log('🔌 MQTT connection status:', data.status);
+        });
+
+        setMqttConnectionStatus('connected');
+      } catch (error) {
+        console.error('MQTT initialization error:', error);
+        setMqttConnectionStatus('error');
+      }
+    };
+
+    // Initialize both systems
+    initializeBackendIntegration();
+    initializeMQTT();
+
+    // Cleanup on unmount
+    return () => {
+      realTimeMQTT.disconnect();
+    };
+  }, []);
+
+  // Enhanced machine refill functionality
+  const handleMachineRefill = async (machineId, supplyType, newLevel) => {
+    try {
+      // Update local state immediately for better UX
+      setRealtimeUpdates(prev => {
+        const updated = new Map(prev);
+        const machine = updated.get(machineId);
+        if (machine) {
+          updated.set(machineId, {
+            ...machine,
+            [supplyType]: newLevel,
+            lastRefill: new Date().toISOString(),
+          });
+        }
+        return updated;
+      });
+
+      // Try to update backend
+      try {
+        await backendAPI.updateMachine(machineId, {
+          supplies: { [supplyType]: newLevel },
+          lastRefill: new Date().toISOString(),
+        });
+        console.log(`✅ ${supplyType} refilled for machine ${machineId}`);
+        toast.success(`${supplyType} refilled successfully`);
+      } catch (error) {
+        console.warn('Backend update failed, updated locally only:', error);
+        toast.success(`${supplyType} refilled (local update)`);
+      }
+    } catch (error) {
+      console.error('Refill failed:', error);
+      toast.error('Refill failed. Please try again.');
+    }
+  };
+
+  // Enhanced facility management for admin users
+  const handleCreateFacility = async (facilityData) => {
+    if (user?.role !== 'ADMIN') {
+      toast.error('Only administrators can create facilities');
+      return;
+    }
+
+    try {
+      // Try to create in backend first
+      try {
+        const response = await backendAPI.createUser({
+          ...facilityData,
+          role: 'FACILITY',
+        });
+        console.log('✅ Facility created in backend:', response);
+        toast.success('Facility created successfully');
+      } catch (error) {
+        console.warn('Backend creation failed:', error);
+        toast.error('Failed to create facility in backend');
+      }
+    } catch (error) {
+      console.error('Facility creation failed:', error);
+      toast.error('Failed to create facility');
+    }
+  };
+
+  // Enhanced analytics data loading
+  const loadAnalyticsData = async () => {
+    try {
+      if (user?.role === 'ADMIN') {
+        // Load system-wide stats for admin
+        try {
+          const systemStats = await backendAPI.getSystemStats();
+          console.log('✅ System stats loaded:', systemStats);
+        } catch (error) {
+          console.warn('Failed to load system stats:', error);
+        }
+      } else {
+        // Load facility-specific stats
+        try {
+          const facilityStats = await backendAPI.getFacilityStats(user?.officeName);
+          console.log('✅ Facility stats loaded:', facilityStats);
+        } catch (error) {
+          console.warn('Failed to load facility stats:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Analytics loading failed:', error);
+    }
+  };
 
   const handleLocationSelect = (location) => {
     setSelectedLocation(location);
@@ -1365,6 +1523,14 @@ export default function CorporateDashboard() {
               )}
             </div>
           )}
+
+          {/* Real-Time Analytics Dashboard */}
+          <div className="mt-8">
+            <RealTimeAnalytics 
+              userRole={user?.role} 
+              selectedFacility={selectedOffice}
+            />
+          </div>
         </div>
       </main>
 
