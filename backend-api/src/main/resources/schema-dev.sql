@@ -8,7 +8,7 @@ DROP VIEW IF EXISTS v_active_machines;
 DROP TABLE IF EXISTS alert;
 DROP TABLE IF EXISTS usage_history;
 DROP TABLE IF EXISTS coffee_machine;
-DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS "user";
 DROP TABLE IF EXISTS facility;
 DROP TABLE IF EXISTS schema_version;
 
@@ -25,7 +25,7 @@ CREATE TABLE facility (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE user (
+CREATE TABLE "user" (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(60) NOT NULL,
