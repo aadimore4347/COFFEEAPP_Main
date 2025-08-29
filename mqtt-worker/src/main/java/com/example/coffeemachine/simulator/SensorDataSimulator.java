@@ -391,6 +391,12 @@ public class SensorDataSimulator {
      * Gets the current simulation statistics.
      */
     public Map<String, Object> getSimulationStats() {
+        // Ensure machine states are initialized lazily if empty
+        if (machineStates.isEmpty() && numberOfMachines > 0) {
+            log.warn("Machine states empty on stats request; initializing {} machines", numberOfMachines);
+            initializeMachineStates();
+        }
+
         Map<String, Object> stats = new HashMap<>();
         stats.put("enabled", enabled);
         stats.put("intervalMs", intervalMs);
