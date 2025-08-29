@@ -47,7 +47,7 @@ class RealTimeMQTT {
 
   // Start polling MQTT worker endpoints
   startPolling() {
-    // Poll simulator stats every 5 seconds
+    // Poll simulator stats every 30 seconds to match MQTT simulator
     this.statsInterval = setInterval(async () => {
       try {
         const stats = await this.getSimulatorStats();
@@ -55,16 +55,16 @@ class RealTimeMQTT {
       } catch (error) {
         console.warn('Failed to fetch simulator stats:', error);
       }
-    }, 5000);
+    }, 30000); // Changed from 5000 to 30000 to match simulator
 
-    // Poll individual machine data every 3 seconds
+    // Poll individual machine data every 30 seconds to match simulator
     this.machineInterval = setInterval(async () => {
       try {
         await this.pollMachineData();
       } catch (error) {
         console.warn('Failed to poll machine data:', error);
       }
-    }, 3000);
+    }, 30000); // Changed from 3000 to 30000 to match simulator
   }
 
   // Get simulator statistics from MQTT worker

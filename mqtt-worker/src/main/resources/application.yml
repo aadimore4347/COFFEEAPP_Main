@@ -44,9 +44,9 @@ simulator:
   
   # Decrease rates per interval (percentage points)
   decrease-rates:
-    water: 1.0    # Water level decreases by 1% per interval when ON
-    milk: 0.5     # Milk level decreases by 0.5% per interval when ON  
-    beans: 0.3    # Beans level decreases by 0.3% per interval when ON
+    water: 2.0    # Water level decreases by 2% per interval when ON
+    milk: 1.5     # Milk level decreases by 1.5% per interval when ON  
+    beans: 1.0    # Beans level decreases by 1% per interval when ON
   
   # Temperature variation settings
   temperature:

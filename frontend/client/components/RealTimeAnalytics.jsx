@@ -35,7 +35,8 @@ export default function RealTimeAnalytics({ userRole, selectedFacility }) {
 
   useEffect(() => {
     // Set refresh interval based on user role
-    setRefreshInterval(userRole === 'ADMIN' ? 60000 : 30000);
+    const interval = userRole === 'ADMIN' ? 30000 : 30000; // Both use 30 seconds to match MQTT simulator
+    setRefreshInterval(interval);
 
     // Initialize MQTT connection
     const initializeMQTT = () => {
@@ -77,20 +78,20 @@ export default function RealTimeAnalytics({ userRole, selectedFacility }) {
     initializeMQTT();
     checkBackendConnection();
 
-    // Set up periodic refresh
-    const interval = setInterval(() => {
+    // Set up periodic refresh - match MQTT simulator interval
+    const refreshInterval = setInterval(() => {
       checkBackendConnection();
-      if (simulatorStats) {
-        // Trigger manual data refresh
+      // Refresh MQTT data every 30 seconds to match simulator
+      if (realTimeMQTT.isConnected) {
         realTimeMQTT.triggerDataGeneration().catch(console.error);
       }
-    }, refreshInterval);
+    }, 30000); // Fixed to 30 seconds
 
     return () => {
-      clearInterval(interval);
+      clearInterval(refreshInterval);
       realTimeMQTT.disconnect();
     };
-  }, [userRole, refreshInterval]);
+  }, [userRole]);
 
   // Get connection status badge
   const getConnectionBadge = (status) => {
