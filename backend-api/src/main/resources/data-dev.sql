@@ -2,6 +2,13 @@
 -- This file is loaded only in the 'dev' profile
 -- Password: 'password' (bcrypt hash: $2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKcnw.tilAYKBcQMZ5m0s1T6)
 
+-- Cleanup for idempotent seeding (delete children first due to FKs)
+DELETE FROM alert;
+DELETE FROM usage_history;
+DELETE FROM coffee_machine;
+DELETE FROM user;
+DELETE FROM facility;
+
 -- ======================================================================================
 -- FACILITIES
 -- ======================================================================================
