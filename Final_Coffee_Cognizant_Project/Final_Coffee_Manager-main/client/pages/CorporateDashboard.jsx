@@ -15,6 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api";
 import { dataManager } from "@/lib/dataManager";
 import { mqttClient, useMQTTSubscription } from "@/lib/mqtt";
+// Import new backend and MQTT integrations
+import backendAPI from "@/lib/backendApi";
+import realTimeMQTT from "@/lib/realTimeMqtt";
 import {
   Coffee,
   MapPin,
@@ -39,6 +42,11 @@ import {
   Droplets,
   Plus,
   Trash2,
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  Database,
+  Server,
 } from "lucide-react";
 import AddMachineModal from "@/components/AddMachineModal";
 import DeleteMachineDialog from "@/components/DeleteMachineDialog";
@@ -59,8 +67,11 @@ export default function CorporateDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Real-time data
+  // Real-time data from MQTT
   const [realtimeUpdates, setRealtimeUpdates] = useState(new Map());
+  const [mqttConnectionStatus, setMqttConnectionStatus] = useState('disconnected');
+  const [backendConnectionStatus, setBackendConnectionStatus] = useState('disconnected');
+  const [simulatorStats, setSimulatorStats] = useState(null);
 
   // Add Machine Modal state
   const [isAddMachineModalOpen, setIsAddMachineModalOpen] = useState(false);
