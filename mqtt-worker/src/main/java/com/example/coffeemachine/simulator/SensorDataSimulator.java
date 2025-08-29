@@ -100,6 +100,9 @@ public class SensorDataSimulator {
         }
 
         try {
+            // Initialize machine states early so stats are available even if MQTT is down
+            initializeMachineStates();
+
             // Initialize MQTT client
             mqttClient = new MqttClient(brokerUrl, clientId + "-simulator", new MemoryPersistence());
             MqttConnectOptions options = new MqttConnectOptions();
@@ -115,14 +118,15 @@ public class SensorDataSimulator {
             mqttClient.connect(options);
             log.info("MQTT client connected successfully to {}", brokerUrl);
 
-            // Initialize machine states
-            initializeMachineStates();
-
             log.info("Sensor data simulator initialized with {} machines, interval: {}ms", 
                     numberOfMachines, intervalMs);
 
         } catch (MqttException e) {
             log.error("Failed to initialize MQTT client: {}", e.getMessage(), e);
+            // Ensure machine states exist even without MQTT connection
+            if (machineStates.isEmpty()) {
+                initializeMachineStates();
+            }
         }
     }
 
@@ -154,7 +158,7 @@ public class SensorDataSimulator {
      */
     @Scheduled(fixedRateString = "${simulator.interval-ms:30000}")
     public void generateAndSendSensorData() {
-        if (!enabled || mqttClient == null || !mqttClient.isConnected()) {
+        if (!enabled) {
             return;
         }
 
@@ -170,8 +174,10 @@ public class SensorDataSimulator {
                 // Update machine state (decrease levels, vary temperature)
                 updateMachineState(state, now);
 
-                // Send sensor data via MQTT
-                sendSensorData(machineId, state, now);
+                // Send sensor data via MQTT if connected; otherwise, only update internal state
+                if (mqttClient != null && mqttClient.isConnected()) {
+                    sendSensorData(machineId, state, now);
+                }
 
                 // Randomly generate usage events
                 if (random.nextDouble() < usageProbability) {

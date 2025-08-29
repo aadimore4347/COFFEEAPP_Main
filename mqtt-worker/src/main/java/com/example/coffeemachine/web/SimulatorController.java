@@ -35,7 +35,11 @@ public class SimulatorController {
         
         try {
             Map<String, Object> stats = sensorDataSimulator.getSimulationStats();
-            return ResponseEntity.ok(stats);
+            return ResponseEntity.ok()
+                .header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+                .header("Pragma", "no-cache")
+                .header("Expires", "0")
+                .body(stats);
         } catch (Exception e) {
             log.error("Error retrieving simulation stats: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of(
