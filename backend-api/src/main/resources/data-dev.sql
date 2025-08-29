@@ -3,11 +3,15 @@
 -- Password: 'password' (bcrypt hash: $2a$10$N.zmdr9k7uOCQb376NoUnuTJ8ioctKcnw.tilAYKBcQMZ5m0s1T6)
 
 -- Cleanup for idempotent seeding (delete children first due to FKs)
-DELETE FROM alert;
-DELETE FROM usage_history;
-DELETE FROM coffee_machine;
-DELETE FROM user;
-DELETE FROM facility;
+-- Cleanup for idempotent seeding, respecting ON DELETE CASCADE rules
+-- H2 requires disabling constraints before truncating or deleting if there are complex dependencies
+SET REFERENTIAL_INTEGRITY FALSE;
+TRUNCATE TABLE alert;
+TRUNCATE TABLE usage_history;
+TRUNCATE TABLE coffee_machine;
+TRUNCATE TABLE user;
+TRUNCATE TABLE facility;
+SET REFERENTIAL_INTEGRITY TRUE;
 
 -- ======================================================================================
 -- FACILITIES
