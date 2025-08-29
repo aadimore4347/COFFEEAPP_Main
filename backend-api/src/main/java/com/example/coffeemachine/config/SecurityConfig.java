@@ -19,6 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+// This is a simple comment added to test the git pull functionality.
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
