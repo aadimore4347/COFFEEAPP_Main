@@ -1,0 +1,108 @@
+{
+  "1": {
+    "id": "1",
+    "machineId": "VM-001",
+    "name": "Coffee Machine Alpha",
+    "location": "Tech Tower",
+    "office": "Engineering",
+    "floor": "Floor 3",
+    "powerStatus": "online",
+    "status": "operational",
+    "supplies": {
+      "water": 92,
+      "milk": 78,
+      "coffee": 85,
+      "sugar": 65
+    },
+    "usage": {
+      "dailyCups": 127,
+      "weeklyCups": 890
+    },
+    "notes": "Machine running smoothly. Recent cleaning completed on schedule.",
+    "alerts": [
+      {
+        "id": "alert-1",
+        "type": "maintenance",
+        "message": "Filter replacement due in 3 days",
+        "priority": "medium",
+        "resolved": false,
+        "timestamp": "2024-01-15T10:30:00Z"
+      }
+    ]
+  },
+  "2": {
+    "id": "2",
+    "machineId": "VM-002",
+    "name": "Coffee Machine Beta",
+    "location": "Tech Tower",
+    "office": "Engineering",
+    "floor": "Floor 2",
+    "powerStatus": "online",
+    "status": "operational",
+    "supplies": {
+      "water": 88,
+      "milk": 45,
+      "coffee": 92,
+      "sugar": 78
+    },
+    "usage": {
+      "dailyCups": 98,
+      "weeklyCups": 686
+    },
+    "notes": "High performance. Minor calibration needed.",
+    "alerts": []
+  },
+  "3": {
+    "id": "3",
+    "machineId": "VM-003",
+    "name": "Coffee Machine Gamma",
+    "location": "Tech Tower",
+    "office": "Engineering",
+    "floor": "Floor 1",
+    "powerStatus": "online",
+    "status": "operational",
+    "supplies": {
+      "water": 95,
+      "milk": 60,
+      "coffee": 75,
+      "sugar": 80
+    },
+    "usage": {
+      "dailyCups": 110,
+      "weeklyCups": 770
+    },
+    "notes": "Newly installed. Running well.",
+    "alerts": []
+  },
+  "4": {
+    "id": "4",
+    "machineId": "VM-004",
+    "name": "Coffee Machine Delta",
+    "location": "Mumbai BKC",
+    "office": "Mumbai BKC",
+    "floor": "Floor 5",
+    "powerStatus": "online",
+    "status": "operational",
+    "supplies": {
+      "water": 85,
+      "milk": 45,
+      "coffee": 68,
+      "sugar": 70
+    },
+    "usage": {
+      "dailyCups": 95,
+      "weeklyCups": 665
+    },
+    "notes": "Good performance in Mumbai office.",
+    "alerts": [
+      {
+        "id": "alert-2",
+        "type": "supply",
+        "message": "Milk supply running low",
+        "priority": "high",
+        "resolved": false,
+        "timestamp": "2024-01-16T09:00:00Z"
+      }
+    ]
+  }
+}
