@@ -97,14 +97,14 @@ CREATE TABLE IF NOT EXISTS maintenance_record (
 -- ======================================================================================
 -- INDEXES FOR PERFORMANCE
 -- ======================================================================================
-CREATE INDEX IF NOT EXISTS idx_user_username ON user(username);
-CREATE INDEX IF NOT EXISTS idx_user_role ON user(role);
-CREATE INDEX IF NOT EXISTS idx_user_facility ON user(facility_id);
-CREATE INDEX IF NOT EXISTS idx_machine_facility ON coffee_machine(facility_id);
-CREATE INDEX IF NOT EXISTS idx_machine_status ON coffee_machine(status);
-CREATE INDEX IF NOT EXISTS idx_usage_machine ON usage_history(machine_id);
-CREATE INDEX IF NOT EXISTS idx_usage_timestamp ON usage_history(timestamp);
-CREATE INDEX IF NOT EXISTS idx_alert_machine ON alert(machine_id);
-CREATE INDEX IF NOT EXISTS idx_alert_type ON alert(type);
-CREATE INDEX IF NOT EXISTS idx_maintenance_machine ON maintenance_record(machine_id);
-CREATE INDEX IF NOT EXISTS idx_maintenance_type ON maintenance_record(type);
+CREATE INDEX idx_user_username ON user(username);
+CREATE INDEX idx_user_role ON user(role);
+CREATE INDEX idx_user_facility ON user(facility_id);
+CREATE INDEX idx_machine_facility ON coffee_machine(facility_id);
+CREATE INDEX idx_machine_status ON coffee_machine(status);
+CREATE INDEX idx_usage_machine ON usage_history(machine_id);
+CREATE INDEX idx_usage_timestamp ON usage_history(timestamp);
+CREATE INDEX idx_alert_machine ON alert(machine_id);
+CREATE INDEX idx_alert_type ON alert(type);
+CREATE INDEX idx_maintenance_machine ON maintenance_record(machine_id);
+CREATE INDEX idx_maintenance_type ON maintenance_record(type);
