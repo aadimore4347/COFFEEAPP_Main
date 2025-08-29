@@ -241,4 +241,32 @@ public class MachineController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    // Endpoints for MQTT worker integration
+    @PostMapping("/{machineId}/status")
+    @Operation(summary = "Update machine status from MQTT", description = "Internal endpoint for MQTT worker to update machine status")
+    public ResponseEntity<Void> updateMachineStatus(
+            @Parameter(description = "Machine ID") @PathVariable Long machineId,
+            @Valid @RequestBody UpdateMachineStatusRequest statusRequest) {
+        coffeeMachineService.updateMachineStatus(machineId, statusRequest);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{machineId}/levels")
+    @Operation(summary = "Update machine levels from MQTT", description = "Internal endpoint for MQTT worker to update machine supply levels")
+    public ResponseEntity<Void> updateMachineLevels(
+            @Parameter(description = "Machine ID") @PathVariable Long machineId,
+            @Valid @RequestBody UpdateMachineLevelsRequest levelsRequest) {
+        coffeeMachineService.updateMachineLevels(machineId, levelsRequest);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{machineId}/history")
+    @Operation(summary = "Record machine usage from MQTT", description = "Internal endpoint for MQTT worker to record a usage event")
+    public ResponseEntity<Void> recordMachineUsage(
+            @Parameter(description = "Machine ID") @PathVariable Long machineId,
+            @Valid @RequestBody RecordUsageRequest usageRequest) {
+        coffeeMachineService.recordUsage(machineId, usageRequest);
+        return ResponseEntity.ok().build();
+    }
 }
