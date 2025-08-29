@@ -37,7 +37,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-        Optional<User> userOpt = userRepository.findByUsername(req.username());
+        Optional<User> userOpt = userRepository.findActiveByUsername(req.username());
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
         }
@@ -72,7 +72,7 @@ public class AuthController {
     @PostMapping("/register")
     @Transactional
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
-        if (userRepository.findByUsername(req.username()).isPresent()) {
+        if (userRepository.findActiveByUsername(req.username()).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Username already exists"));
         }
 
