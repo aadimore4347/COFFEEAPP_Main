@@ -37,31 +37,31 @@ INSERT INTO user (id, username, password_hash, role, facility_id, is_active, cre
 
 -- Downtown Office Machines (2 machines)
 INSERT INTO coffee_machine (id, facility_id, status, temperature, water_level, milk_level, beans_level, is_active, created_at, updated_at) VALUES
-(1, 1, 'ON', 92.5, 85, 75, 90, true, '2024-01-15 08:45:00', NOW() - INTERVAL 5 MINUTE),
-(2, 1, 'ON', 91.0, 18, 15, 65, true, '2024-01-15 09:00:00', NOW() - INTERVAL 3 MINUTE);
+(1, 1, 'ON', 92.5, 85, 75, 90, true, '2024-01-15 08:45:00', '2024-01-15 08:50:00'),
+(2, 1, 'ON', 91.0, 18, 15, 65, true, '2024-01-15 09:00:00', '2024-01-15 09:03:00');
 
 -- Tech Campus Machines (4 machines - high volume location)
 INSERT INTO coffee_machine (id, facility_id, status, temperature, water_level, milk_level, beans_level, is_active, created_at, updated_at) VALUES
-(3, 2, 'OFF', 25.0, 95, 85, 80, true, '2024-01-20 10:30:00', NOW() - INTERVAL 15 MINUTE),
-(4, 2, 'ERROR', 88.0, 12, 8, 25, true, '2024-01-20 10:45:00', NOW() - INTERVAL 2 MINUTE),
-(5, 2, 'ON', 93.2, 70, 60, 55, true, '2024-01-20 11:00:00', NOW() - INTERVAL 1 MINUTE),
-(6, 2, 'ON', 90.8, 45, 52, 78, true, '2024-01-20 11:15:00', NOW() - INTERVAL 7 MINUTE);
+(3, 2, 'OFF', 25.0, 95, 85, 80, true, '2024-01-20 10:30:00', '2024-01-20 10:45:00'),
+(4, 2, 'ERROR', 88.0, 12, 8, 25, true, '2024-01-20 10:45:00', '2024-01-20 10:47:00'),
+(5, 2, 'ON', 93.2, 70, 60, 55, true, '2024-01-20 11:00:00', '2024-01-20 11:01:00'),
+(6, 2, 'ON', 90.8, 45, 52, 78, true, '2024-01-20 11:15:00', '2024-01-20 11:08:00');
 
 -- Branch Office Machines (2 machines)
 INSERT INTO coffee_machine (id, facility_id, status, temperature, water_level, milk_level, beans_level, is_active, created_at, updated_at) VALUES
-(7, 3, 'ON', 91.5, 65, 45, 72, true, '2024-02-01 11:00:00', NOW() - INTERVAL 10 MINUTE),
-(8, 3, 'ON', 92.8, 89, 82, 88, true, '2024-02-01 11:30:00', NOW() - INTERVAL 6 MINUTE);
+(7, 3, 'ON', 91.5, 65, 45, 72, true, '2024-02-01 11:00:00', '2024-02-01 11:10:00'),
+(8, 3, 'ON', 92.8, 89, 82, 88, true, '2024-02-01 11:30:00', '2024-02-01 11:36:00');
 
 -- Research Center Machines (3 machines)
 INSERT INTO coffee_machine (id, facility_id, status, temperature, water_level, milk_level, beans_level, is_active, created_at, updated_at) VALUES
-(9, 4, 'ON', 93.0, 78, 68, 82, true, '2024-02-10 12:00:00', NOW() - INTERVAL 4 MINUTE),
-(10, 4, 'ERROR', 85.5, 25, 15, 35, true, '2024-02-10 12:15:00', NOW() - INTERVAL 8 MINUTE),
-(11, 4, 'ON', 91.8, 92, 88, 95, true, '2024-02-10 12:30:00', NOW() - INTERVAL 2 MINUTE);
+(9, 4, 'ON', 93.0, 78, 68, 82, true, '2024-02-10 12:00:00', '2024-02-10 12:04:00'),
+(10, 4, 'ERROR', 85.5, 25, 15, 35, true, '2024-02-10 12:15:00', '2024-02-10 12:07:00'),
+(11, 4, 'ON', 91.8, 92, 88, 95, true, '2024-02-10 12:30:00', '2024-02-10 12:28:00');
 
 -- Remote Hub Machines (2 machines)
 INSERT INTO coffee_machine (id, facility_id, status, temperature, water_level, milk_level, beans_level, is_active, created_at, updated_at) VALUES
-(12, 5, 'ON', 92.2, 55, 38, 62, true, '2024-02-15 15:30:00', NOW() - INTERVAL 12 MINUTE),
-(13, 5, 'OFF', 22.0, 88, 92, 85, true, '2024-02-15 16:00:00', NOW() - INTERVAL 20 MINUTE);
+(12, 5, 'ON', 92.2, 55, 38, 62, true, '2024-02-15 15:30:00', '2024-02-15 15:18:00'),
+(13, 5, 'OFF', 22.0, 88, 92, 85, true, '2024-02-15 16:00:00', '2024-02-15 15:40:00');
 
 -- ======================================================================================
 -- USAGE HISTORY (Realistic usage patterns)
@@ -70,34 +70,34 @@ INSERT INTO coffee_machine (id, facility_id, status, temperature, water_level, m
 -- Recent usage (last 24 hours) - Peak hours simulation
 -- Note: Using MySQL/H2 compatible syntax for development. Production should use Flyway for schema management.
 INSERT INTO usage_history (id, machine_id, timestamp, brew_type, volume_ml, temp_at_brew, is_active, created_at, updated_at) VALUES
--- Morning rush (7-9 AM) - Downtown Office
-(1, 1, NOW() - INTERVAL 2 HOUR, 'ESPRESSO', 30, 92.5, true, NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 2 HOUR),
-(2, 1, NOW() - INTERVAL 2 HOUR + INTERVAL 15 MINUTE, 'CAPPUCCINO', 150, 91.8, true, NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 2 HOUR),
-(3, 2, NOW() - INTERVAL 1 HOUR + INTERVAL 45 MINUTE, 'LATTE', 200, 91.2, true, NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR),
-(4, 2, NOW() - INTERVAL 1 HOUR + INTERVAL 30 MINUTE, 'AMERICANO', 250, 91.0, true, NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR),
+-- Morning rush (sample times)
+(1, 1, '2024-03-10 08:00:00', 'ESPRESSO', 30, 92.5, true, '2024-03-10 08:00:00', '2024-03-10 08:00:00'),
+(2, 1, '2024-03-10 08:15:00', 'CAPPUCCINO', 150, 91.8, true, '2024-03-10 08:15:00', '2024-03-10 08:15:00'),
+(3, 2, '2024-03-10 08:45:00', 'LATTE', 200, 91.2, true, '2024-03-10 08:45:00', '2024-03-10 08:45:00'),
+(4, 2, '2024-03-10 08:30:00', 'AMERICANO', 250, 91.0, true, '2024-03-10 08:30:00', '2024-03-10 08:30:00'),
 
 -- Tech Campus - High volume
-(5, 5, NOW() - INTERVAL 3 HOUR, 'ESPRESSO', 30, 93.0, true, NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 3 HOUR),
-(6, 5, NOW() - INTERVAL 3 HOUR + INTERVAL 10 MINUTE, 'ESPRESSO', 30, 93.2, true, NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 3 HOUR),
-(7, 6, NOW() - INTERVAL 2 HOUR + INTERVAL 30 MINUTE, 'CAPPUCCINO', 150, 90.8, true, NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 2 HOUR),
-(8, 6, NOW() - INTERVAL 2 HOUR + INTERVAL 45 MINUTE, 'LATTE', 200, 91.0, true, NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 2 HOUR),
+(5, 5, '2024-03-10 09:00:00', 'ESPRESSO', 30, 93.0, true, '2024-03-10 09:00:00', '2024-03-10 09:00:00'),
+(6, 5, '2024-03-10 09:10:00', 'ESPRESSO', 30, 93.2, true, '2024-03-10 09:10:00', '2024-03-10 09:10:00'),
+(7, 6, '2024-03-10 09:30:00', 'CAPPUCCINO', 150, 90.8, true, '2024-03-10 09:30:00', '2024-03-10 09:30:00'),
+(8, 6, '2024-03-10 09:45:00', 'LATTE', 200, 91.0, true, '2024-03-10 09:45:00', '2024-03-10 09:45:00'),
 
 -- Lunch time (12-2 PM)
-(9, 7, NOW() - INTERVAL 5 HOUR, 'AMERICANO', 250, 91.5, true, NOW() - INTERVAL 5 HOUR, NOW() - INTERVAL 5 HOUR),
-(10, 8, NOW() - INTERVAL 5 HOUR + INTERVAL 20 MINUTE, 'FLAT_WHITE', 160, 92.8, true, NOW() - INTERVAL 5 HOUR, NOW() - INTERVAL 5 HOUR),
+(9, 7, '2024-03-10 12:00:00', 'AMERICANO', 250, 91.5, true, '2024-03-10 12:00:00', '2024-03-10 12:00:00'),
+(10, 8, '2024-03-10 12:20:00', 'FLAT_WHITE', 160, 92.8, true, '2024-03-10 12:20:00', '2024-03-10 12:20:00'),
 
 -- Research Center - Steady usage
-(11, 9, NOW() - INTERVAL 4 HOUR, 'ESPRESSO', 30, 93.0, true, NOW() - INTERVAL 4 HOUR, NOW() - INTERVAL 4 HOUR),
-(12, 11, NOW() - INTERVAL 3 HOUR + INTERVAL 30 MINUTE, 'MOCHA', 200, 91.8, true, NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 3 HOUR),
+(11, 9, '2024-03-10 13:00:00', 'ESPRESSO', 30, 93.0, true, '2024-03-10 13:00:00', '2024-03-10 13:00:00'),
+(12, 11, '2024-03-10 13:30:00', 'MOCHA', 200, 91.8, true, '2024-03-10 13:30:00', '2024-03-10 13:30:00'),
 
 -- Remote Hub
-(13, 12, NOW() - INTERVAL 6 HOUR, 'CAPPUCCINO', 150, 92.2, true, NOW() - INTERVAL 6 HOUR, NOW() - INTERVAL 6 HOUR),
+(13, 12, '2024-03-10 11:00:00', 'CAPPUCCINO', 150, 92.2, true, '2024-03-10 11:00:00', '2024-03-10 11:00:00'),
 
 -- Historical usage (last week) for analytics
-(14, 1, NOW() - INTERVAL 1 DAY, 'ESPRESSO', 30, 92.0, true, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 1 DAY),
-(15, 1, NOW() - INTERVAL 2 DAY, 'CAPPUCCINO', 150, 91.5, true, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 2 DAY),
-(16, 5, NOW() - INTERVAL 1 DAY, 'LATTE', 200, 93.1, true, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 1 DAY),
-(17, 5, NOW() - INTERVAL 2 DAY, 'AMERICANO', 250, 92.8, true, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 2 DAY),
+(14, 1, '2024-03-09 10:00:00', 'ESPRESSO', 30, 92.0, true, '2024-03-09 10:00:00', '2024-03-09 10:00:00'),
+(15, 1, '2024-03-08 10:00:00', 'CAPPUCCINO', 150, 91.5, true, '2024-03-08 10:00:00', '2024-03-08 10:00:00'),
+(16, 5, '2024-03-09 11:00:00', 'LATTE', 200, 93.1, true, '2024-03-09 11:00:00', '2024-03-09 11:00:00'),
+(17, 5, '2024-03-08 11:00:00', 'AMERICANO', 250, 92.8, true, '2024-03-08 11:00:00', '2024-03-08 11:00:00'),
 (18, 9, NOW() - INTERVAL 3 DAY, 'MACCHIATO', 40, 92.5, true, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 3 DAY),
 
 -- More historical data for trends
