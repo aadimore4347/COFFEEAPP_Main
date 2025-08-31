@@ -13,8 +13,8 @@ export const setupGlobalErrorHandling = ()=>{
             event.preventDefault();
             return;
         }
-    // Let other errors through normally (silently)
-    // console.error('Unhandled promise rejection:', error);
+    // Let other errors through normally
+    console.error('Unhandled promise rejection:', error);
     });
     // Handle regular JavaScript errors
     window.addEventListener("error", (event)=>{
@@ -24,8 +24,8 @@ export const setupGlobalErrorHandling = ()=>{
             event.preventDefault();
             return;
         }
-    // Let other errors through (silently)
-    // console.error('Global error:', error);
+    // Let other errors through
+    console.error('Global error:', error);
     });
 };
 // Auto-setup when module loads

@@ -12,7 +12,7 @@ import jakarta.validation.constraints.Size;
  * or ADMIN users (full system access).
  */
 @Entity
-@Table(name = "user", 
+@Table(name = "`user`",
        uniqueConstraints = @UniqueConstraint(columnNames = "username"),
        indexes = {
            @Index(name = "idx_user_username", columnList = "username"),

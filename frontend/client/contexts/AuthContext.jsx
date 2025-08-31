@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
         backendAPI.setToken(response.accessToken);
         tokenManager.setToken(response.accessToken);
         // We store the user object to avoid an extra /me call right after login
-        localStorage.setItem("coffee_auth_user", JSON.stringify(userData));
+        // localStorage.setItem("coffee_auth_user", JSON.stringify(userData));
 
         setUser(userData);
         await initializeMQTT();
@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     backendAPI.setToken(null);
     tokenManager.removeToken();
-    localStorage.removeItem("coffee_auth_user");
+    // localStorage.removeItem("coffee_auth_user");
 
     if (mqttClient && mqttClient.connected) {
       mqttClient.end();
