@@ -112,4 +112,24 @@ public class AuthController {
         // In production, validate a stored refresh token
         return ResponseEntity.badRequest().body(Map.of("error", "Refresh not implemented with persistence"));
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getMe(org.springframework.security.core.Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+        }
+        String username = authentication.getName();
+        Optional<User> userOpt = userRepository.findActiveByUsername(username);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        }
+        User user = userOpt.get();
+        Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("id", user.getId());
+        userDetails.put("username", user.getUsername());
+        userDetails.put("role", user.getRole().name());
+        userDetails.put("facilityId", user.getFacility() != null ? user.getFacility().getId() : null);
+
+        return ResponseEntity.ok(userDetails);
+    }
 }
