@@ -1,10 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { apiClient, tokenManager } from "@/lib/api";
+import { tokenManager } from "@/lib/api";
 import { initializeMQTT, mqttClient } from "@/lib/mqtt";
-import { USER_ROLES, DEMO_CREDENTIALS } from "@/config";
-import { generateDemoUsers } from "@/config/machines";
-import { dataManager } from "@/lib/dataManager";
-// Import new backend API
 import backendAPI from "@/lib/backendApi";
 
 const defaultContextValue = {
@@ -14,191 +10,64 @@ const defaultContextValue = {
   isLoading: true,
   isAuthenticated: false,
   register: async () => false,
-  refreshToken: async () => false,
 };
 
 const AuthContext = createContext(defaultContextValue);
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  return context;
-};
-
-const isDemoMode = () => {
-  const hostname = window.location.hostname;
-  return (
-    hostname.includes(".fly.dev") ||
-    hostname.includes(".netlify.app") ||
-    hostname.includes(".vercel.app") ||
-    hostname.includes("builder.io") ||
-    (hostname.includes("localhost") === false && hostname !== "127.0.0.1")
-  );
+  return useContext(AuthContext);
 };
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [demoMode] = useState(isDemoMode());
 
   useEffect(() => {
     const initializeAuth = async () => {
-      try {
-        const storedUser = localStorage.getItem("coffee_auth_user");
-        const token = tokenManager.getToken();
-
-        if (storedUser && token && !tokenManager.isTokenExpired(token)) {
-          const userData = JSON.parse(storedUser);
-          setUser(userData);
+      const token = tokenManager.getToken();
+      if (token && !tokenManager.isTokenExpired(token)) {
+        try {
+          // Token exists, validate it by fetching user profile
           backendAPI.setToken(token);
-
-          try {
-            dataManager.getAllMachinesFromSharedStorage();
-            dataManager.ensureUserDataPersistence(userData.role, userData.officeName);
-            console.log('✅ AUTH: Data persistence restored for returning user');
-          } catch (error) {
-            console.warn('Failed to initialize data persistence on auth restoration:', error);
-          }
-
-          initializeMQTT().then((connected) => {
-            if (connected) {
-              // MQTT initialized for authenticated user
-            }
-          });
-        } else {
-          // Try to refresh token if expired
-          if (token && tokenManager.isTokenExpired(token)) {
-            try {
-              await refreshTokenFromStorage();
-            } catch (error) {
-              console.warn('Token refresh failed, logging out:', error);
-              logout();
-            }
-          } else {
-            tokenManager.removeToken();
-          }
+          const userData = await backendAPI.getMe();
+          setUser(userData);
+          await initializeMQTT();
+        } catch (error) {
+          console.error("Session validation failed:", error);
+          // If token is invalid, log the user out
+          logout();
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        logout();
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
     initializeAuth();
   }, []);
 
-  // Refresh token from storage
-  const refreshTokenFromStorage = async () => {
-    try {
-      const refreshToken = localStorage.getItem("coffee_auth_refresh_token");
-      if (!refreshToken) throw new Error('No refresh token');
-
-      const response = await backendAPI.refreshToken(refreshToken);
-      if (response.accessToken) {
-        backendAPI.setToken(response.accessToken);
-        tokenManager.setToken(response.accessToken);
-        
-        if (response.refreshToken) {
-          localStorage.setItem("coffee_auth_refresh_token", response.refreshToken);
-        }
-        
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      throw error;
-    }
-  };
-
   const login = async (username, password) => {
     setIsLoading(true);
-
     try {
-      // Try backend authentication first
-      if (!demoMode) {
-        try {
-          const response = await backendAPI.login({ username, password });
-          
-          if (response.accessToken) {
-            const userData = {
-              id: response.user.id || response.user.username,
-              username: response.user.username,
-              name: response.user.name || response.user.username,
-              role: response.user.role || 'FACILITY',
-              city: response.user.city || 'Unknown',
-              officeName: response.user.officeName || 'Unknown Office',
-              email: response.user.email,
-            };
+      const response = await backendAPI.login({ username, password });
+      if (response.accessToken) {
+        const userData = response.user;
 
-            // Store tokens
-            backendAPI.setToken(response.accessToken);
-            tokenManager.setToken(response.accessToken);
-            
-            if (response.refreshToken) {
-              localStorage.setItem("coffee_auth_refresh_token", response.refreshToken);
-            }
-
-            setUser(userData);
-            localStorage.setItem("coffee_auth_user", JSON.stringify(userData));
-
-            try {
-              dataManager.getAllMachinesFromSharedStorage();
-              dataManager.ensureUserDataPersistence(userData.role, userData.officeName);
-              console.log('✅ LOGIN: Backend authentication successful');
-            } catch (error) {
-              console.warn('Failed to initialize data persistence on login:', error);
-            }
-
-            await initializeMQTT();
-            return true;
-          }
-        } catch (backendError) {
-          console.warn('Backend authentication failed, falling back to demo mode:', backendError);
-          // Fall back to demo mode if backend is unavailable
-        }
-      }
-
-      // Demo mode authentication (existing logic)
-      const registeredUsers = JSON.parse(
-        localStorage.getItem("registeredUsers") || "[]",
-      );
-      const foundUser = registeredUsers.find(
-        (user) => user.username === username && user.password === password,
-      );
-
-      if (foundUser) {
-        const userData = {
-          id: foundUser.username,
-          username: foundUser.username,
-          name: foundUser.name,
-          role: foundUser.role,
-          city: foundUser.city,
-          officeName: foundUser.officeName,
-        };
+        backendAPI.setToken(response.accessToken);
+        tokenManager.setToken(response.accessToken);
+        // We store the user object to avoid an extra /me call right after login
+        localStorage.setItem("coffee_auth_user", JSON.stringify(userData));
 
         setUser(userData);
-        localStorage.setItem("coffee_auth_user", JSON.stringify(userData));
-        localStorage.setItem("coffee_auth_token", "simple_token_" + Date.now());
-
-        try {
-          dataManager.getAllMachinesFromSharedStorage();
-          dataManager.ensureUserDataPersistence(userData.role, userData.officeName);
-          console.log('✅ LOGIN: Demo mode authentication successful');
-        } catch (error) {
-          console.warn('Failed to initialize data persistence on login:', error);
-        }
-
         await initializeMQTT();
+
         setIsLoading(false);
         return true;
       }
-
+      // This path should ideally not be taken if API call is successful
+      // but without a token. Included for robustness.
       setIsLoading(false);
       return false;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login failed:", error);
       setIsLoading(false);
       return false;
     }
@@ -206,48 +75,15 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     setIsLoading(true);
-
     try {
-      // Try backend registration first
-      if (!demoMode) {
-        try {
-          const response = await backendAPI.register(userData);
-          
-          if (response.success || response.user) {
-            console.log('✅ REGISTER: Backend registration successful');
-            setIsLoading(false);
-            return true;
-          }
-        } catch (backendError) {
-          console.warn('Backend registration failed, falling back to demo mode:', backendError);
-          // Fall back to demo mode if backend is unavailable
-        }
-      }
-
-      // Demo mode registration (existing logic)
-      const registeredUsers = JSON.parse(
-        localStorage.getItem("registeredUsers") || "[]",
-      );
-
-      const newUser = {
-        username: userData.username,
-        password: userData.password,
-        name: userData.name,
-        role: userData.role || "FACILITY",
-        city: userData.city || "Unknown",
-        officeName: userData.officeName || "Unknown Office",
-      };
-
-      registeredUsers.push(newUser);
-      localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
-
-      console.log('✅ REGISTER: Demo mode registration successful');
+      await backendAPI.register(userData);
       setIsLoading(false);
       return true;
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Registration failed:', error);
       setIsLoading(false);
-      return false;
+      // It's helpful to pass the error message to the component
+      throw error;
     }
   };
 
@@ -256,24 +92,11 @@ export const AuthProvider = ({ children }) => {
     backendAPI.setToken(null);
     tokenManager.removeToken();
     localStorage.removeItem("coffee_auth_user");
-    localStorage.removeItem("coffee_auth_refresh_token");
-    localStorage.removeItem("coffee_auth_token");
-    
-    if (mqttClient) {
-      mqttClient.disconnect();
-    }
-    
-    console.log('✅ LOGOUT: User logged out successfully');
-  };
 
-  const refreshToken = async () => {
-    try {
-      return await refreshTokenFromStorage();
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      logout();
-      return false;
+    if (mqttClient && mqttClient.connected) {
+      mqttClient.end();
     }
+    console.log('User logged out successfully');
   };
 
   const contextValue = {
@@ -281,10 +104,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     register,
-    refreshToken,
     isLoading,
     isAuthenticated: !!user,
-    demoMode,
   };
 
   return (

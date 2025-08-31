@@ -73,6 +73,10 @@ class BackendAPI {
     });
   }
 
+  async getMe() {
+    return this.request('/auth/me');
+  }
+
   // Machine Management APIs
   async getMachines() {
     return this.request('/machine');

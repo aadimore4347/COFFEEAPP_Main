@@ -3,6 +3,10 @@ package com.example.coffeemachine.web;
 import com.example.coffeemachine.domain.Facility;
 import com.example.coffeemachine.domain.User;
 import com.example.coffeemachine.domain.UserRole;
+import com.example.coffeemachine.domain.Facility;
+import com.example.coffeemachine.domain.User;
+import com.example.coffeemachine.domain.UserRole;
+import com.example.coffeemachine.repository.FacilityRepository;
 import com.example.coffeemachine.repository.UserRepository;
 import com.example.coffeemachine.security.JwtService;
 import com.example.coffeemachine.service.PasswordService;
@@ -22,13 +26,15 @@ import java.util.Optional;
 public class AuthController {
 
     private final UserRepository userRepository;
+    private final FacilityRepository facilityRepository;
     private final PasswordService passwordService;
     private final JwtService jwtService;
 
     public AuthController(UserRepository userRepository,
-                          PasswordService passwordService,
+                          FacilityRepository facilityRepository, PasswordService passwordService,
                           JwtService jwtService) {
         this.userRepository = userRepository;
+        this.facilityRepository = facilityRepository;
         this.passwordService = passwordService;
         this.jwtService = jwtService;
     }
@@ -81,11 +87,18 @@ public class AuthController {
         user.setUsername(req.username());
         user.setPasswordHash(passwordService.hash(req.password()));
         user.setRole(role);
-        if (role == UserRole.FACILITY && req.facilityId() != null) {
-            Facility facility = new Facility();
-            facility.setId(req.facilityId()); // Reference by id only
-            user.setFacility(facility);
+
+        if (role == UserRole.FACILITY) {
+            if (req.facilityId() == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Facility ID is required for facility users"));
+            }
+            Optional<Facility> facilityOpt = facilityRepository.findById(req.facilityId());
+            if (facilityOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Facility not found"));
+            }
+            user.setFacility(facilityOpt.get());
         }
+
         userRepository.save(user);
 
         return ResponseEntity.ok(Map.of("success", true));
@@ -98,5 +111,25 @@ public class AuthController {
         // Simple implementation: issue a new token for demo purposes
         // In production, validate a stored refresh token
         return ResponseEntity.badRequest().body(Map.of("error", "Refresh not implemented with persistence"));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getMe(org.springframework.security.core.Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+        }
+        String username = authentication.getName();
+        Optional<User> userOpt = userRepository.findActiveByUsername(username);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        }
+        User user = userOpt.get();
+        Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("id", user.getId());
+        userDetails.put("username", user.getUsername());
+        userDetails.put("role", user.getRole().name());
+        userDetails.put("facilityId", user.getFacility() != null ? user.getFacility().getId() : null);
+
+        return ResponseEntity.ok(userDetails);
     }
 }

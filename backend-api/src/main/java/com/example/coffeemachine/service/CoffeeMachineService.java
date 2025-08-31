@@ -287,4 +287,35 @@ public class CoffeeMachineService {
                     return coffeeMachineRepository.save(existing);
                 });
     }
+
+    // --- Methods for MQTT Worker Integration ---
+
+    public void updateMachineStatus(Long machineId, com.example.coffeemachine.service.dto.UpdateMachineStatusRequest request) {
+        coffeeMachineRepository.findActiveById(machineId).ifPresent(machine -> {
+            if (request.getStatus() != null) {
+                updateStatus(machineId, MachineStatus.valueOf(request.getStatus()));
+            }
+            if (request.getTemperature() != null) {
+                updateTemperature(machineId, request.getTemperature().doubleValue());
+            }
+        });
+    }
+
+    public void updateMachineLevels(Long machineId, com.example.coffeemachine.service.dto.UpdateMachineLevelsRequest request) {
+        coffeeMachineRepository.findActiveById(machineId).ifPresent(machine -> {
+            if (request.getWaterLevel() != null) {
+                updateWaterLevel(machineId, request.getWaterLevel());
+            }
+            if (request.getMilkLevel() != null) {
+                updateMilkLevel(machineId, request.getMilkLevel());
+            }
+            if (request.getBeansLevel() != null) {
+                updateBeansLevel(machineId, request.getBeansLevel());
+            }
+        });
+    }
+
+    public void recordUsage(Long machineId, com.example.coffeemachine.service.dto.RecordUsageRequest request) {
+        recordBrewing(machineId, request.getBrewType(), request.getVolumeMl());
+    }
 }
