@@ -70,15 +70,15 @@
     <!-- Production profile logging -->
     <springProfile name="prod">
         <logger name="com.example.coffeemachine" level="INFO" additivity="false">
-            <appender-ref ref="FILE"/>
+            <appender-ref ref="JSON"/>
         </logger>
         
         <logger name="org.springframework.integration.mqtt" level="WARN" additivity="false">
-            <appender-ref ref="FILE"/>
+            <appender-ref ref="JSON"/>
         </logger>
         
         <root level="WARN">
-            <appender-ref ref="FILE"/>
+            <appender-ref ref="JSON"/>
         </root>
     </springProfile>
 
