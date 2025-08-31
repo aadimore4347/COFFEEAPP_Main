@@ -14,8 +14,6 @@ export default function Signup() {
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
-    name: "",
-    email: "", // Changed from gmail
     password: "",
     confirmPassword: "",
     role: "FACILITY", // Default to FACILITY
